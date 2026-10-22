@@ -1,0 +1,44 @@
+{
+  "id": "wp-dashboard-share-email-gateway",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-08-08",
+  "topic": "Shared dashboard invite loops back to email entry",
+  "product_area": "Web Platform / Dashboard sharing",
+  "environment": [
+    "Invite-only shared dashboard",
+    "Recipients outside the org behind an email security gateway"
+  ],
+  "symptom_pattern": "External recipients of an invite-only shared dashboard click the access link, enter their email, receive a verification email, click it, and land back on the email-entry page in a loop.",
+  "root_cause": "The recipients' email security gateway rewrites or pre-scans links, consuming the one-time access link before the human clicks it.",
+  "resolution_path": [
+    "Confirm sharing config and recipient list",
+    "Have the recipient inspect the raw link URL for a rewriting domain",
+    "Ask their IT to exempt the sharing domain from URL rewriting, then retry with the newest email in a normal window"
+  ],
+  "info_needed": [
+    "share type and recipients",
+    "the raw URL in the email",
+    "browser used"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "When you right-click and copy the link from the email, what domain does it start with?",
+      "customer_answer": "It starts with something like safelinks.protection.outlook.com."
+    },
+    {
+      "tse_question": "Do the emails arrive at all?",
+      "customer_answer": "Yes, every time, within a minute."
+    }
+  ],
+  "customer_style": {
+    "tone": "account manager relaying a client complaint, non-technical",
+    "technical_level": "low",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

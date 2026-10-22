@@ -1,0 +1,44 @@
+{
+  "id": "synth-pl-blocked-ranges",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-08-14",
+  "topic": "Private location test fails with blocked IP error",
+  "product_area": "Synthetics / Private locations",
+  "environment": [
+    "Private location worker",
+    "Targets on RFC1918 addresses"
+  ],
+  "symptom_pattern": "After a security review, every test from the private location to internal endpoints fails with an error saying the IP is blocked, though DNS resolves correctly.",
+  "root_cause": "enableDefaultBlockedIpRanges was turned on during hardening, which blocks reserved/private ranges, i.e. exactly where the internal targets live.",
+  "resolution_path": [
+    "Read the exact error in the test result",
+    "Inspect enableDefaultBlockedIpRanges / blockedIPRanges / allowedIPRanges",
+    "Allow the needed internal ranges explicitly or disable the default block"
+  ],
+  "info_needed": [
+    "error message",
+    "worker config",
+    "what the security review changed"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What's the exact error message in the failed test result?",
+      "customer_answer": "It says the connection was blocked because the IP is in a reserved range or something like that."
+    },
+    {
+      "tse_question": "What did the security review change in the worker config?",
+      "customer_answer": "They added enableDefaultBlockedIpRanges: true so it can't reach our metadata endpoints."
+    }
+  ],
+  "customer_style": {
+    "tone": "security-minded, wants to keep a restrictive posture",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "synthetics/private-location"
+}

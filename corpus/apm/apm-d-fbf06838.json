@@ -1,0 +1,96 @@
+{
+  "id": "apm-d-fbf06838",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-29",
+  "topic": ".NET Tracer managed diagnostic logs filling disk on Windows IIS hosts",
+  "product_area": "APM - .NET Tracer (Windows/IIS)",
+  "environment": [
+    "Windows Server",
+    "IIS with w3wp worker processes",
+    ".NET 6 application",
+    "Datadog .NET Tracer 3.x",
+    "Datadog Agent on the same host"
+  ],
+  "symptom_pattern": "On some IIS hosts the .NET Tracer log folder grows to many GB and causes disk space problems. The customer wants to know why so many logs are generated.",
+  "root_cause": "The tracer's managed logs (dotnet-tracer-managed-w3wp-<PID>.log) accounted for about 16.9 GB across thousands of files. Each w3wp process writes its own file, and the tracer rotates a file at about 10 MB. Files are kept for 32 days by default (DD_TRACE_LOGFILE_RETENTION_DAYS), so many PIDs from several app pools or IIS recycles pile up. The tracer was not in debug mode, and the native tracer logs were negligible. The thread never identified why individual workers produced so many rotated files, because the customer could not supply a large rotated log.",
+  "resolution_path": [
+    "Checked the tracer version and a recent managed log, which ruled out the initial hypothesis of a known issue in older tracer versions",
+    "Ran a PowerShell summary of the log folder grouped by file kind. It showed the managed logs were about 16.87 GB and the native logs about 0.03 GB",
+    "Explained the per-w3wp file naming, the roughly 10 MB rotation and the 32-day default retention",
+    "Advised deleting older rotated files to free space now",
+    "Advised setting DD_TRACE_LOGFILE_RETENTION_DAYS=3 in the WAS service Environment multi-string registry value, then fully restarting IIS",
+    "Clarified that retention is applied when a worker process starts, so it does not delete existing files by itself",
+    "Clarified there is no Datadog UI or Fleet Automation setting to push this tracer variable to all hosts, so it must be deployed with the customer's own configuration management and followed by an IIS restart",
+    "Asked for one large rotated managed log to find the repeating message. The customer's end customer had removed the agent, no log was provided, and the ticket was closed"
+  ],
+  "info_needed": [
+    "Output of a PowerShell check of the tracer log folder, including a search for the tracer configuration and debug lines",
+    "Datadog .NET Tracer version from Programs and Features",
+    "Per-kind size and count summary of the tracer log folder, plus the 15 largest files",
+    "One large rotated dotnet-tracer-managed log (about 10 MB) to identify the repeating message"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which .NET Tracer version is installed, and what do the tracer log files and configuration lines show on that host?",
+      "customer_answer": "They sent log excerpts showing the tracer configuration with debug disabled and the native tracer version, which ruled out the initial hypothesis."
+    },
+    {
+      "tse_question": "Which file types in the tracer log folder are using the space, and how large are the biggest files?",
+      "customer_answer": "They sent a summary showing thousands of managed log files totalling about 16.9 GB. The native, native-loader and other files were negligible, and the largest files were rotated w3wp managed logs."
+    },
+    {
+      "tse_question": "Can you attach one of the large rotated managed logs so we can see the repeating message?",
+      "customer_answer": "They were relaying the request to their own customer, then said the agent had been removed from that server and they would need another example. They never sent a log."
+    }
+  ],
+  "customer_style": {
+    "tone": "brief and polite, with repeated requests to find the cause",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "DD_TRACE_LOGFILE_RETENTION_DAYS=3",
+    "DD_TRACE_LOGFILE_RETENTION_DAYS",
+    "net stop /y was",
+    "net start w3svc",
+    "HKLM\\System\\CurrentControlSet\\Services\\WAS",
+    "C:\\ProgramData\\Datadog .NET Tracer\\logs",
+    "dotnet-tracer-managed-w3wp-<PID>.log",
+    "managed 2731 16.87",
+    "native 2326 0.03",
+    "\"debug\":false"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer first tested a version-related hypothesis, then used targeted PowerShell commands to measure what was using disk space. They explained the log naming, rotation and retention behaviour with a mitigation, then kept asking for a large rotated log to find the repeating message.",
+    "steps": [
+      "Asked for the tracer version and a PowerShell search of the latest managed log",
+      "Reviewed the output and dropped the initial hypothesis",
+      "Asked for a per-kind size and count summary and the largest files",
+      "Explained the per-w3wp files, the 10 MB rotation and the 32-day default retention",
+      "Gave a cleanup suggestion and the retention registry setting with the IIS restart commands",
+      "Answered the question about a global UI setting by explaining that this is a tracer setting, not an Agent setting",
+      "Repeatedly requested a large rotated log, then suggested closing the ticket when the customer could not provide one"
+    ],
+    "key_questions": [
+      "Which .NET Tracer version is installed?",
+      "Which file kinds in the tracer log folder account for the disk usage?",
+      "Can you attach one large rotated managed log to see the repeating message?"
+    ],
+    "communication": [
+      "Provided copy-paste PowerShell commands and exact registry and restart steps. Explained that retention only applies when a worker starts and does not delete existing files. Clearly separated tracer settings from Agent and Fleet Automation settings. Suggested closing the ticket so it would not sit in pending, with an invitation to reopen."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

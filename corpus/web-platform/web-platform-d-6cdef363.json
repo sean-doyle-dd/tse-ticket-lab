@@ -1,0 +1,86 @@
+{
+  "id": "web-platform-d-6cdef363",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-14",
+  "topic": "Bulk change of user login email (handle) after an email domain migration affecting SSO",
+  "product_area": "Account management / user login handle updates",
+  "environment": [
+    "Multiple Datadog organizations",
+    "SSO login",
+    "Datadog login handle tied to the user's email domain"
+  ],
+  "symptom_pattern": "The customer's IT team is migrating users to a new email domain. This also changes the SSO login, so the Datadog login handle of the affected users has to be updated at an agreed time. The request comes with CSV files of old and new emails and covers several organizations.",
+  "root_cause": "This was a planned change request rather than a fault. The users' email domain was changing, so the Datadog handles had to be updated by support to match the new SSO identities.",
+  "resolution_path": [
+    "Support confirmed it could do the migration at the customer's requested date and time.",
+    "Support asked for one CSV file per organization, because the current CSV mixed users from several orgs and user updates are processed separately for each org.",
+    "The customer split the CSV into one file per organization.",
+    "Support removed the header row from the files and asked the customer to confirm the content was correct.",
+    "The customer confirmed the files and told support to proceed at the scheduled time.",
+    "Support updated the user handles for all four organizations at the scheduled time and told the customer that users who sign in with a username and password would need to reset their passwords.",
+    "The customer confirmed everything worked and asked for one more account to be changed in one org.",
+    "Support updated that handle and closed the ticket."
+  ],
+  "info_needed": [
+    "One CSV file per organization listing the old and new email for each user",
+    "The date and time the customer's IT change takes effect",
+    "Confirmation from the customer that the CSV contents are correct before support applies them"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Please provide one CSV file per organization, since the current CSV mixes users from multiple organizations and updates must be processed separately for each org.",
+      "customer_answer": "The customer sent four CSV files, one per organization, and noted that two users belong to all four orgs and so appear in each file."
+    },
+    {
+      "tse_question": "Please review the updated files (header row removed) once more and confirm the details are correct before the scheduled update.",
+      "customer_answer": "The customer confirmed the files without the header row were correct and told support to proceed at the scheduled time."
+    },
+    {
+      "tse_question": "Please check and confirm that everything is working as expected after the handle update.",
+      "customer_answer": "The customer confirmed it worked for all four orgs and asked for one additional account, missed from the original files, to be updated in one org."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, organized and professional",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Before proceeding, please provide one CSV file per organization, as user updates must be processed separately for each org.",
+    "Processing it as-is may cause the update to fail.",
+    "I have removed the header row containing old email and new email.",
+    "If the affected users sign in with a username and password, they will need to reset their passwords."
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer confirmed the requested schedule, then asked the customer to split the data into one CSV per org. They had the customer confirm the cleaned files before making the change at the agreed time, then reported back and handled a late addition.",
+    "steps": [
+      "Acknowledged the request and confirmed the requested date and time.",
+      "Spotted that the CSV mixed multiple orgs and asked for one file per org.",
+      "Cleaned the files by removing the header row and asked the customer to re-confirm them.",
+      "Confirmed the schedule again after the customer approved.",
+      "Updated the handles for all orgs at the scheduled time and posted an update.",
+      "Applied one additional handle change requested after the main batch.",
+      "Closed the ticket with feedback and reopen instructions."
+    ],
+    "key_questions": [
+      "Could you provide one CSV file per organization?",
+      "Please review the updated files again and confirm the details are correct."
+    ],
+    "communication": [
+      "Explained why the CSV had to be split, which was that updates are processed per org. Gave the schedule in the customer's time zone and in the engineer's own. Asked for explicit confirmation before acting. After the change, warned that password-based users need to reset their passwords and explained that internal tickets would be created per org with no action needed from the customer."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

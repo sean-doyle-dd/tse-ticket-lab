@@ -1,0 +1,36 @@
+name: {{ meta.short_id }}
+networks:
+  internal:
+{%- if p.WORKER_NETWORK == "isolated" %}
+  dmz:
+{%- endif %}
+
+volumes:
+  pl-config:
+
+services:
+  internal-api:
+    build: ./internal-api
+    environment:
+      ORDERS_DELAY_SECONDS: "{{ p.TARGET_DELAY_SECONDS }}"
+    networks: [internal]
+
+  # Merges config/overrides.json into your downloaded config, then exits.
+  config-merge:
+    image: python:3.12-alpine
+    command: ["python", "/merge/merge.py"]
+    volumes:
+      - ./config:/config:ro
+      - ./merge:/merge:ro
+      - pl-config:/out
+
+  pl-worker:
+    image: gcr.io/datadoghq/synthetics-private-location-worker:latest
+    depends_on:
+      config-merge:
+        condition: service_completed_successfully
+      internal-api:
+        condition: service_started
+    volumes:
+      - pl-config:/etc/datadog:ro
+    networks: [{{ "dmz" if p.WORKER_NETWORK == "isolated" else "internal" }}]

@@ -1,0 +1,70 @@
+{
+  "id": "apm-d-50a22f6c",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-08-20",
+  "topic": "Java tracer via machine-wide JAVA_TOOL_OPTIONS prevents application launch",
+  "product_area": "apm",
+  "environment": [
+    "Windows Citrix servers",
+    "Java tracer dd-java-agent 1.9.0",
+    "Java client runtime 21",
+    "Launcher using Java 11 (Temurin)",
+    "Oracle WebLogic Server on Java 8"
+  ],
+  "symptom_pattern": "After setting JAVA_TOOL_OPTIONS machine-wide with a -javaagent argument, a Java application launched through a custom launcher aborts at start with an error about requiring Java Runtime 1.8. Existing running instances are unaffected. Resetting the variable to empty makes the application start normally. No traces ever reached APM.",
+  "root_cause": "A machine-wide JAVA_TOOL_OPTIONS (setx ... /M) injects the -javaagent into every JVM on the server, including the application's launcher and the checks it runs at startup. That aborted the launch before the application client JVM started. It was not a tracer defect, not related to the WebLogic Server, and not a Java 1.8 runtime problem, since the client runs on Java 21.",
+  "resolution_path": [
+    "Keep the system-wide JAVA_TOOL_OPTIONS empty, as in the reset: setx JAVA_TOOL_OPTIONS \"\" /M",
+    "Add the -javaagent and -Ddd.* settings to the JVM arguments the launcher uses to start the application, so only that JVM is instrumented",
+    "Make sure the -javaagent argument comes before the application/main entry",
+    "Upgrade the tracer from the 1.9.0 build to the current Java tracer, which supports Java 8, 11 and 21",
+    "If the WebLogic Server JVM is to be traced instead, put the agent in that server's startup script JAVA_OPTIONS rather than a global variable"
+  ],
+  "info_needed": [
+    "Exact error message shown at application start",
+    "Time windows of the failing and successful login tests",
+    "Application and launcher logs exported from the failing period",
+    "Java runtime versions of the client, launcher and server"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, cooperative and detailed",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "setx JAVA_TOOL_OPTIONS \"\" /M",
+    "-javaagent:C:\\ProgramData\\Datadog\\Downloads\\Datadog_Java_Tracer\\dd-java-agent.jar -Ddd.service=ecount-webutil-client -Ddd.env=dev",
+    "Die Pipe wurde beendet"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/tracing/trace_collection/dd_libraries/java/"
+  ],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer used the customer's timed reproduction and exported logs to show the failure came from the machine-wide variable reaching the launcher's JVM. They then gave a scoped configuration and a tracer upgrade.",
+    "steps": [
+      "Reviewed the customer's reproduction timeline and the exported logs",
+      "Compared the failing window with the passing windows before the variable was set and after the reset",
+      "Checked the client log for the Java version and found it ran Java 21, not 1.8",
+      "Found no tracer output in the logs and no APM traces reported for the org",
+      "Explained that a machine-wide JAVA_TOOL_OPTIONS instruments every JVM, including the launcher",
+      "Recommended attaching the agent only to the application's JVM arguments and upgrading the tracer"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Opened by stating the cause was configuration scope rather than a tracer fault, and said it was unrelated to WebLogic or Java 1.8. Gave lettered steps, with an example argument string. Added a note on instrumenting the WebLogic JVM instead and linked the docs page. Offered to take questions."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

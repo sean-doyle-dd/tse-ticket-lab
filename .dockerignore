@@ -1,0 +1,11 @@
+.env
+.git
+.venv
+__pycache__
+*.pyc
+instance
+.pytest_cache
+corpus/_staging
+tools
+.render
+.corpus-state

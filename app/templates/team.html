@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Team · TSE Ticket Lab{% endblock %}
+{% block content %}
+<section class="hero"><h1>Team overview</h1><p class="muted">Only admins (ADMIN_EMAILS) can see this page.</p></section>
+<section class="panel">
+  <h2>People</h2>
+  <table class="table">
+    <thead><tr><th>Name</th><th>Email</th><th class="num">Tickets</th><th class="num">Graded</th><th class="num">Avg score</th><th>Last sign-in</th></tr></thead>
+    <tbody>{% for u, n, graded, avg in people %}
+      <tr><td>{{ u.name }}</td><td class="muted">{{ u.email }}</td><td class="num">{{ n }}</td><td class="num">{{ graded }}</td>
+          <td class="num">{{ avg | round | int if avg is not none else '–' }}</td>
+          <td class="muted">{{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '–' }}</td></tr>
+    {% endfor %}</tbody>
+  </table>
+</section>
+<section class="panel">
+  <h2>Recent tickets</h2>
+  {% set rows = recent %}{% include "_ticket_table.html" %}
+</section>
+<section class="panel">
+  <h2>Claude usage</h2>
+  <p class="small">This month: <strong>${{ '%.2f' % month_cost }}</strong> · All time: <strong>${{ '%.2f' % total_cost }}</strong> · Average per ticket: <strong>${{ '%.2f' % per_ticket }}</strong></p>
+  <p class="muted small">With <code>LLM_PROVIDER=claude_cli</code>, these are the API-equivalent costs the CLI reports. They count against the subscription's usage limits rather than appearing as a separate invoice.</p>
+  <table class="table">
+    <thead><tr><th>Purpose</th><th>Model</th><th class="num">Calls</th><th class="num">Input tokens</th><th class="num">Output tokens</th><th class="num">Cache reads</th><th class="num">Cost (USD)</th></tr></thead>
+    <tbody>{% for purpose, model, calls, inp, outp, cache, cost in usage %}
+      <tr><td>{{ purpose }}</td><td class="mono">{{ model }}</td><td class="num">{{ calls }}</td><td class="num">{{ '{:,}'.format(inp or 0) }}</td><td class="num">{{ '{:,}'.format(outp or 0) }}</td><td class="num">{{ '{:,}'.format(cache or 0) }}</td><td class="num">${{ '%.2f' % (cost or 0) }}</td></tr>
+    {% else %}<tr><td colspan="7" class="muted">No calls yet.</td></tr>{% endfor %}</tbody>
+  </table>
+</section>
+{% endblock %}

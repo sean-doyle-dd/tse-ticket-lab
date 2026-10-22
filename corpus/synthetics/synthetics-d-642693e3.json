@@ -1,0 +1,90 @@
+{
+  "id": "synthetics-d-642693e3",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-10-14",
+  "topic": "Browser Synthetic test runs on private and managed locations disappear with no result in Test Runs",
+  "product_area": "Synthetic Monitoring - Browser tests (private and managed locations)",
+  "environment": [
+    "Browser Synthetic test with a long multi-step journey (66 steps)",
+    "Private location running as a Docker container",
+    "Managed locations",
+    "Same test run on multiple locations at once"
+  ],
+  "symptom_pattern": "A browser test run on several locations at once showed results only from one private location. Runs on the other private location and the managed locations stayed In Progress for about 15 minutes, then vanished from the Test Runs view with no failure shown. Toggling paused/live results and running locations separately did not help. Earlier runs had worked, one succeeded at random, and a similar episode had been seen before. The customer had no logs to debug with.",
+  "root_cause": "Per the support engineer's summary of engineering's findings, the runs were executing all along. One run reached step 39 of 66. The test then stopped on the step that clicks a link inside a hover menu. The dropdown redraws between locating the link and clicking it, so the click lands on an element that no longer exists. This is an intermittent timing race. It was reproduced from both a managed location and the private location, so it was not location-specific. Runs that stop this way are classified as an unexpected internal error, and results in that category do not appear on the test page. Engineering is treating that as a reporting defect. The thread calls the timing cause 'potential' and says the support team could not test on their side. The backend logs showed repeated 'Node detached from document' errors.",
+  "resolution_path": [
+    "Collected private location logs, first from a fresh debug-verbosity run and later from a rerun",
+    "Reviewed backend logs for the test and found repeated 'Node detached from document' errors",
+    "Ruled out the browser test quota because the account limit had already been raised",
+    "Escalated to Synthetics engineering, who found the runs were executing and had stopped on a hover-menu click step",
+    "Suggested enabling 'click with JavaScript' on the failing step",
+    "Suggested adding a short Wait immediately before the failing step so the menu settles first",
+    "The customer later confirmed the scripts now run on both public and private locations and asked to close the ticket",
+    "The reporting defect (results not shown for this error class) stays with engineering"
+  ],
+  "info_needed": [
+    "Private location logs covering the window of the failures, from several shards and not just one",
+    "Logs from two or three failed runs, with timestamps noted",
+    "Private location verbosity set to debug, then logs captured during a failing run",
+    "Login credentials for the application under test, or dummy credentials, so the support team can reproduce"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share logs from the private location covering the period when the managed location failures happened?",
+      "customer_answer": "The customer said the server team could not retrieve September records any more. They gave logs from a fresh rerun instead and showed in a screenshot that only one of the two private locations had a record for that run."
+    },
+    {
+      "tse_question": "Can you set private location verbosity to debug, restart the container, run the test and collect the container logs?",
+      "customer_answer": "The customer did this and sent logs from a single run. They explained they had taken the instructions to mean capturing logs from a new run."
+    },
+    {
+      "tse_question": "Can you provide the login credentials for the application under test, or dummy credentials, so we can reproduce?",
+      "customer_answer": "The customer said they would ask the application team. No credentials were provided in the thread, and the customer later said the tests were running again."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, formal, patient",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Node detached from document",
+    "39 of 66 steps",
+    "unexpected internal error",
+    "click with JavaScript",
+    "detached, unhealthy, and Critical error",
+    "docker logs <contaienr_id>"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer collected private location logs and escalated to Synthetics engineering. They kept asking for credentials to reproduce. They then relayed engineering's findings with two workarounds once the customer reported the issue resolved.",
+    "steps": [
+      "Asked for private location logs and test credentials",
+      "Shared the received logs with the escalations team",
+      "Pointed out that the supplied logs covered only one 19-minute run, and asked for logs from the failure window across all log shards",
+      "Suggested grepping for detached, unhealthy and Critical error, or enabling verbose logging and noting the time of a failing run",
+      "Clarified the earlier log instructions after the customer said they had caused confusion, and asked for logs from two or three failed runs",
+      "Thanked the customer for the fresh logs and again asked for authorisation to use the existing test credentials or dummy ones",
+      "After the customer reported success, sent the engineering findings, the likely cause and two workarounds"
+    ],
+    "key_questions": [
+      "Can you share logs covering the window when the failures happened, from all log shards?",
+      "Can you share login credentials, or dummy credentials, for the application under test?"
+    ],
+    "communication": [
+      "Gave step-by-step log collection options and explained why credentials were needed to reproduce. Apologised for the earlier confusion and acknowledged the customer's view. The final message explained the cause in plain terms, separated what engineering would fix from what the customer could do, and stated the closing policy."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-10"
+  }
+}

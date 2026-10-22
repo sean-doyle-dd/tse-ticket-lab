@@ -1,0 +1,78 @@
+{
+  "id": "web-platform-d-459da3fe",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-08-25",
+  "topic": "Password reset emails not delivered after switching a user from Google SSO to login/password",
+  "product_area": "Account management / user authentication (password reset email delivery)",
+  "environment": [
+    "Datadog EU site",
+    "User login method switched from Google SSO to standard username/password",
+    "User's original Google account was removed"
+  ],
+  "symptom_pattern": "A user whose Google SSO account was removed had their login method changed to username/password. Using the forgot-password flow, they never received the password reset email, so they could not log in.",
+  "root_cause": "The user's email address was on Datadog's email bounce suppression list because of an earlier bounce (550 5.4.1 Recipient address rejected: Access denied), so password reset emails were being suppressed. Removing the address from the bounce list did not stop the suppression, and it was escalated to an internal team through a Jira issue. After the escalation, emails were reported as delivered correctly from Aug 19, and the customer's retried password reset then worked. The thread does not describe the exact internal fix.",
+  "resolution_path": [
+    "Confirmed the user already had the standard username/password login method enabled",
+    "Found the user's email address on the internal email bounce list and removed it",
+    "Asked the user to retry the password reset from the forgot-password page for the EU site",
+    "Checked internal logs and saw that bounce suppression of password reset emails was still occurring for the same reason",
+    "Escalated to an internal team with a Jira issue, and updated the customer while waiting",
+    "Told the customer that emails appeared to be delivered correctly since Aug 19 and asked the user to try the reset again",
+    "Customer confirmed the password reset worked"
+  ],
+  "info_needed": [
+    "Which login method is currently enabled for the affected user",
+    "Whether the user received the password reset email after each retry",
+    "Whether the user's email address is on the bounce suppression list, and the bounce reason"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could the user try resetting their password via the EU site's forgot-password page after the address was removed from the bounce list?",
+      "customer_answer": "The user tried the process but still did not receive any reset email."
+    },
+    {
+      "tse_question": "Could the user try resetting their password again, since emails appeared to be delivered correctly from Aug 19?",
+      "customer_answer": "The customer confirmed it worked."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, cooperative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "550 5.4.1 Recipient address rejected: Access denied",
+    "Bounce suppression: suppressing password_reset_request"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer verified the account's login method and found the bounced address on the internal bounce list, then removed it. When the logs showed suppression continuing, they escalated through Jira, kept the customer updated, and asked for a retest once delivery was working.",
+    "steps": [
+      "Confirmed the user's login method was already username/password",
+      "Found the address on the email bounce list with the bounce reason and removed it",
+      "Asked the customer to have the user retry the password reset on the EU site",
+      "Checked internal logs and saw suppression still occurring",
+      "Reported the finding to the customer and escalated internally with a Jira issue",
+      "Sent a status update while waiting on the internal team",
+      "Asked the customer to retest once emails appeared to be delivered",
+      "Confirmed with the customer that it worked"
+    ],
+    "key_questions": [
+      "Could the user retry the password reset using the dedicated forgot-password link for the EU site?",
+      "Could the user try resetting the password again now that emails are delivered correctly?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

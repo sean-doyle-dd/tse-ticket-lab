@@ -1,0 +1,43 @@
+{
+  "id": "synth-api-self-signed-cert",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-08-28",
+  "topic": "API test fails TLS validation against internal service",
+  "product_area": "Synthetics / API tests",
+  "environment": [
+    "HTTPS API test from a private location",
+    "Internal CA-signed certificate"
+  ],
+  "symptom_pattern": "An HTTPS API test from a private location fails with a certificate error ('unable to verify the first certificate') while browsers in the office show the site as secure.",
+  "root_cause": "The service uses a certificate from an internal CA that is trusted on corporate laptops but not by the worker. The test needs the CA trusted on the worker or 'accept self-signed certificates' enabled as a stop-gap.",
+  "resolution_path": [
+    "Read the TLS error in results",
+    "Determine the certificate chain/issuer",
+    "Trust the internal root CA in the worker (or enable accept self-signed) and re-run"
+  ],
+  "info_needed": [
+    "exact error",
+    "certificate issuer",
+    "where the worker runs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Who issued the certificate on that service?",
+      "customer_answer": "Our internal PKI, 'Corp Root CA 2'."
+    },
+    {
+      "tse_question": "Is the test option to accept self-signed certificates enabled?",
+      "customer_answer": "No, we didn't want to weaken security."
+    }
+  ],
+  "customer_style": {
+    "tone": "security-conscious, articulate",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": ""
+}

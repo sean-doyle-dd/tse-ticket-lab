@@ -1,0 +1,10 @@
+{
+  "enableDefaultBlockedIpRanges": {{ p.BLOCK_RESERVED_RANGES }},
+{%- if p.DNS_MODE == "public_only" %}
+  "dnsUseHost": false,
+  "dnsServer": ["8.8.8.8", "1.1.1.1"],
+{%- else %}
+  "dnsUseHost": true,
+{%- endif %}
+  "concurrency": 10
+}

@@ -1,0 +1,43 @@
+{
+  "id": "synth-browser-locator-after-deploy",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-10-01",
+  "topic": "Browser test fails after frontend redesign",
+  "product_area": "Synthetics / Browser tests",
+  "environment": [
+    "Browser test with recorded steps",
+    "Frontend deployed with new component library"
+  ],
+  "symptom_pattern": "A browser test that clicks 'Add to cart' started failing right after a frontend release with 'element not found', though the button visibly exists in the screenshot.",
+  "root_cause": "The recorded step relies on a user-specified locator (an id/class that changed in the redesign) instead of the default multi-locator, so it no longer matches the new markup.",
+  "resolution_path": [
+    "Open the failing step's locator settings",
+    "Compare with the new DOM",
+    "Remove the brittle user locator or use a stable data-* attribute, then re-record if needed"
+  ],
+  "info_needed": [
+    "failing step and its error",
+    "step locator configuration",
+    "release timing"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Did the failing step have a custom (user specified) locator?",
+      "customer_answer": "Yes, someone added #add-to-cart-btn to make it 'more stable'."
+    },
+    {
+      "tse_question": "Can you check the button's id in the new release?",
+      "customer_answer": "It's now a generated class, no id at all."
+    }
+  ],
+  "customer_style": {
+    "tone": "QA lead, practical",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": ""
+}

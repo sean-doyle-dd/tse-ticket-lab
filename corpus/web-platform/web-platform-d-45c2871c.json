@@ -1,0 +1,78 @@
+{
+  "id": "web-platform-d-45c2871c",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-09-15",
+  "topic": "Table widget shows scientific notation for very small percentage values despite precision setting",
+  "product_area": "Dashboards / Table widget number formatting",
+  "environment": [
+    "Datadog dashboard Table widget",
+    "Formula using default_zero on two queries, multiplied by 100, with percent unit"
+  ],
+  "symptom_pattern": "In a table widget, a formula-based percent column renders very small values (below about 0.005%) in scientific notation, such as 3.20e-4 %, instead of a fixed decimal. This happens even with precision set to 2, unit_scale set to percent and autoscale disabled. The customer wanted values below the rounding threshold to show as 0.00 %.",
+  "root_cause": "The table widget's number formatter falls back to scientific notation when a value is below the configured precision threshold. This is expected behavior, and it is not specific to the percent canonical unit. No supported setting forces fixed decimals without the fallback.",
+  "resolution_path": [
+    "Confirmed that the scientific-notation fallback for sub-precision values is expected behavior in the table widget formatter and applies across unit types.",
+    "Explained that no supported configuration (unit type, unit_scale, custom unit label or formula-level rounding) gives both always-2-decimals and no scientific notation.",
+    "Described the current options: precision 5 fixes all but the most extreme rows, while precision 2 matches the desired display but keeps scientific notation on the smallest values.",
+    "Proposed a '<0.01%' style display, as used in other Datadog products such as Cloud Cost Management, and the customer agreed it would work.",
+    "Opened a feature request on the customer's behalf, linked it to an internal Jira issue, and closed the ticket. The customer was told there was no timeline."
+  ],
+  "info_needed": [
+    "Screenshots of the table widget showing the scientific-notation rendering",
+    "Which display the customer would accept in place of scientific notation for sub-threshold values"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you share a screenshot from a dashboard widget demonstrating this behavior?",
+      "customer_answer": "The customer sent screenshots showing the problem."
+    },
+    {
+      "tse_question": "Would a '<0.01%' style display for values below the precision threshold work for your use case?",
+      "customer_answer": "Yes, it would work well. They also have multiple tables and dashboards with the same behavior and would like it as a widget-level option or formatting setting, without changing existing behavior for other users."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and professional, with the issue first raised through an internal Customer Success contact",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "(default_zero(query2) / default_zero(query4)) * 100",
+    "unit: percent (canonical_unit), unit_scale: percent, precision: 2, autoscale disabled",
+    "3.20e-4 %",
+    "6.90e-5 %",
+    "0.01 %",
+    "0.00 %",
+    "<0.01%"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE first asked for screenshots to confirm the behavior. They then consulted the graphing team internally, gave the customer a clear explanation that this is expected behavior with no supported workaround, and proposed an alternative display. Once the customer agreed, they filed a feature request and closed the ticket.",
+    "steps": [
+      "Asked for a screenshot demonstrating the scientific-notation display.",
+      "Consulted the internal graphing channel on whether the fallback is expected and whether any configuration avoids it.",
+      "Told the customer the behavior is expected, that no supported configuration satisfies both requirements, and which current settings come closest.",
+      "Suggested the '<0.01%' style used elsewhere in Datadog and asked whether it would meet the customer's needs.",
+      "Logged an internal Jira issue and a feature request after the customer agreed."
+    ],
+    "key_questions": [
+      "Could you share a screenshot from a dashboard widget demonstrating this behavior?",
+      "Would a '<0.01%' style display work for your use case?"
+    ],
+    "communication": [
+      "Answered the customer's questions directly: expected behavior, no supported configuration, and the closest current setup. Laid out the configuration trade-offs (precision 5 versus precision 2) and asked the customer which to keep. Said plainly that there was no timeline and explained how to follow up on the feature request using the ticket number."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

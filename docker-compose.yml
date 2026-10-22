@@ -1,0 +1,64 @@
+# TSE Ticket Lab: `cp .env.example .env`, paste your own CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`), then `docker compose up -d --build`.
+# Optional self-monitoring with a Datadog Agent: `docker compose --profile datadog up -d`.
+name: ticket-lab
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ticketlab}
+      POSTGRES_USER: ${POSTGRES_USER:-ticketlab}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticketlab}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  web:
+    build:
+      context: .
+      target: prod
+    image: tse-ticket-lab:latest
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ticketlab}:${POSTGRES_PASSWORD:-ticketlab}@db:5432/${POSTGRES_DB:-ticketlab}
+      DD_AGENT_HOST: datadog-agent
+      DD_SERVICE: tse-ticket-lab
+      DD_ENV: ${DD_ENV:-dev}
+      DD_VERSION: "1.0.0"
+      DD_LOGS_INJECTION: "true"
+    volumes:
+      # Promoted seeds go live with a restart (docker compose restart web), no rebuild.
+      # _staging/ is skipped by the loader.
+      - ./corpus:/app/corpus:ro
+    ports:
+      - "${WEB_PORT:-8095}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  datadog-agent:
+    profiles: ["datadog"]
+    image: gcr.io/datadoghq/agent:7
+    restart: unless-stopped
+    environment:
+      DD_API_KEY: ${DD_API_KEY:-}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_APM_ENABLED: "true"
+      DD_APM_NON_LOCAL_TRAFFIC: "true"
+      DD_LOGS_ENABLED: "true"
+      DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL: "true"
+      DD_CONTAINER_EXCLUDE: "name:.*datadog-agent.*"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+
+volumes:
+  pgdata:

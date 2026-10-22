@@ -1,0 +1,71 @@
+id: apm/multi-service
+title: Python storefront → Node inventory → Postgres, traced
+description: >
+  Two instrumented services, storefront (Python Flask + ddtrace) calling inventory (Node
+  Express + dd-trace) backed by Postgres, plus a containerised Agent 7 and steady traffic.
+  Adapted from the APM mock-technical-call lab. Good for missing traces, tracer not loaded,
+  Agent receiver config, broken distributed traces, sampling vs ingestion, unified service
+  tagging and trace↔log correlation tickets. Each fault is a single env var in config/*.env.
+services: [datadog-agent, storefront, inventory, db, traffic]
+editable: [config/agent.env, config/storefront.env, config/inventory.env]
+params:
+  STOREFRONT_AGENT_HOST:
+    description: storefront DD_AGENT_HOST
+    default: datadog-agent
+    choices:
+      datadog-agent: healthy
+      localhost: "broken: storefront traces go to its own container and are lost; inventory still reports"
+  INVENTORY_AGENT_PORT:
+    description: inventory DD_TRACE_AGENT_PORT
+    default: "8126"
+    choices:
+      "8126": healthy
+      "8127": "broken: the Node tracer can't reach the Agent (ECONNREFUSED in tracer logs); storefront still reports"
+  APM_NON_LOCAL_TRAFFIC:
+    description: Agent DD_APM_NON_LOCAL_TRAFFIC
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: the trace receiver only listens on localhost, so no traces from any service, while infra metrics stay fine"
+  APM_ENABLED:
+    description: Agent DD_APM_ENABLED
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: trace-agent not running, nothing listening on 8126, no traces at all"
+  INVENTORY_TRACER_LOADED:
+    description: inventory NODE_OPTIONS (how dd-trace is loaded before the app)
+    default: "yes"
+    choices:
+      "yes": healthy, NODE_OPTIONS=--require dd-trace/init
+      "no": "broken: NODE_OPTIONS empty, so the Node tracer never loads; inventory missing from APM"
+  STOREFRONT_START_CMD:
+    description: storefront START_CMD
+    default: ddtrace-run python app.py
+    choices:
+      ddtrace-run python app.py: healthy
+      python app.py: "broken: the Python tracer never loads; storefront missing from APM and inventory becomes the root"
+  STOREFRONT_PROPAGATION:
+    description: storefront DD_TRACE_PROPAGATION_STYLE_INJECT
+    default: default
+    choices:
+      default: healthy, unset (datadog + tracecontext)
+      none: "broken: no trace headers are injected, so storefront and inventory show as separate, disconnected traces"
+  STOREFRONT_SAMPLE_RATE:
+    description: storefront DD_TRACE_SAMPLE_RATE
+    default: "1"
+    choices:
+      "1": healthy
+      "0": "broken: traces are received (live search shows them) but none are ingested/indexed for retention"
+  INVENTORY_ENV:
+    description: inventory DD_ENV (storefront and the Agent use this sandbox's env)
+    default: match
+    choices:
+      match: healthy, same env as storefront
+      production: "broken: inventory reports under env:production, so it 'disappears' from the env filter and the service map edge breaks"
+  STOREFRONT_LOGS_INJECTION:
+    description: storefront DD_LOGS_INJECTION
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: storefront logs carry no dd.trace_id, so trace→logs correlation is empty"

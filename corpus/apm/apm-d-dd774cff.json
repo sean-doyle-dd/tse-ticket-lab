@@ -1,0 +1,118 @@
+{
+  "id": "apm-d-dd774cff",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-08-13",
+  "topic": "log4net logs not reaching Datadog from IIS .NET Framework app when Direct Log Submission is enabled but silent",
+  "product_area": "APM / .NET tracer log collection (Direct Log Submission, log4net, Agent file tailing)",
+  "environment": [
+    "Windows Server",
+    "IIS",
+    "ASP.NET on .NET Framework 4.8.1",
+    "log4net",
+    "Datadog .NET Tracer installed via MSI",
+    "Datadog Agent running on the host",
+    "tracer environment variables set through the WAS registry key"
+  ],
+  "symptom_pattern": "APM traces, runtime metrics and host metrics arrive in Datadog, but log4net application logs do not appear, either via Agent collection or via Direct Log Submission. The tracer startup configuration reports log injection and direct log submission enabled with no error. The customer's managed tracer log never shows DirectSubmission or Log4NetLogFormatter activity, and a manual test log sent to the EU intake from the same host works, which rules out network, proxy and API key problems.",
+  "root_cause": "Not conclusively determined. The support engineer's best read was that the root logger's only appender is a custom async forwarding appender wrapping a RemotingAppender, so log4net may have a null appender list when the tracer hook runs and skip the append silently. The thread says this was still under investigation on the engineering side. Direct Log Submission therefore did not capture events in this setup, and the customer could not add a Datadog appender to the existing architecture.",
+  "resolution_path": [
+    "Confirmed the WAS registry key is the correct and only place for the IIS environment variables, and advised restarting with net stop /y was and net start w3svc instead of iisreset",
+    "Confirmed from the tracer startup configuration that log injection and direct log submission were enabled, so delivery rather than injection was the blocker",
+    "Ruled out network, proxy and API key problems when the customer's PowerShell test log reached the EU intake in Live Tail",
+    "Reviewed the log4net config and the native profiler log, which showed the log4net hooks attached at the CLR level",
+    "Suggested a workaround: add a second appender-ref on the root logger pointing to a RollingFileAppender, leaving the existing appenders unchanged",
+    "Pointed the Agent at that file path in a csharp conf.yaml log section and restarted the Agent",
+    "Customer added the Datadog trace context properties to the log4net conversion pattern, created a grok parser to extract them, and configured a multi_line processing rule in conf.yaml",
+    "Logs then appeared and were correlated with APM traces"
+  ],
+  "info_needed": [
+    "Full managed tracer debug logs from the same w3wp process, collected with DD_TRACE_DEBUG=true",
+    "The production log4net config actually loaded by the IIS site",
+    "Result of a connectivity test to the log intake endpoint with the real API key",
+    "Which logger the application messages actually go through",
+    "Whether the custom forwarding appender wraps the RemotingAppender",
+    "Agent flare and confirmation the log file is growing, if the file-tail workaround failed"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you send the full tracer debug logs from a run with DD_TRACE_DEBUG=true, including the managed log from the same worker process?",
+      "customer_answer": "Sent the debug logs, and after redoing the run they confirmed the managed log came from the correct w3wp process. They found no DirectSubmission or Log4NetLogFormatter entries in it."
+    },
+    {
+      "tse_question": "Can you share the production log4net config loaded by the IIS site?",
+      "customer_answer": "Shared a config with a RemotingAppender wrapped by an async forwarding appender attached to the root logger at DEBUG level, plus NHibernate loggers with their appender-refs commented out."
+    },
+    {
+      "tse_question": "Can you run a connectivity test to the log intake from the Windows Server with your API key?",
+      "customer_answer": "A PowerShell test log sent with the real API key to the EU intake showed up in Live Tail, so network and key were fine."
+    },
+    {
+      "tse_question": "Do the SelectToPagedList messages come through the NHibernate.SQL logger with the commented-out appender-ref, or through a logger inheriting from root?",
+      "customer_answer": "Said the application logs go to two destinations, the remoting sink and a custom forwarding appender, and both receive them successfully."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, detailed and cooperative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "DD_LOGS_INJECTION=true",
+    "DD_RUNTIME_METRICS_ENABLED=true",
+    "DD_LOGS_DIRECT_SUBMISSION_INTEGRATIONS=Serilog;Log4Net",
+    "DD_LOGS_DIRECT_SUBMISSION_MINIMUM_LEVEL=Debug",
+    "HKLM\\System\\CurrentControlSet\\Services\\WAS",
+    "net stop /y was",
+    "net start w3svc",
+    "DD_TRACE_DEBUG=true",
+    "DD_TRACE_LOG_DIRECTORY",
+    "\"log_injection_enabled\":true",
+    "\"direct_logs_submission_enabled_integrations\":[\"Serilog\",\"Log4Net\"]",
+    "\"direct_logs_submission_enabled\":true",
+    "\"direct_logs_submission_error\":\"\"",
+    "log4net.Util.AppenderAttachedImpl.AppendLoopOnAppenders",
+    "log4net.Appender.AppenderCollection.ToArray",
+    "<appender-ref ref=\"DatadogFileAppender\" />"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/tracing/trace_collection/dd_libraries/dotnet-framework/#iis",
+    "https://docs.datadoghq.com/tracing/troubleshooting/tracer_debug_logs/?tab=dotnet",
+    "https://docs.datadoghq.com/logs/log_collection/csharp/?tab=log4net"
+  ],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer answered the customer's side questions directly from the docs and focused the investigation on why Direct Log Submission was silent. They used the tracer startup config, native profiler log and connectivity tests to narrow it down, then offered a file-tail workaround that fit the customer's constraint of not changing the existing appenders.",
+    "steps": [
+      "Answered the registry key and tracer log location questions with doc references",
+      "Used the tracer startup configuration to rule out log injection as the blocker",
+      "Requested the full tracer debug logs, the loaded log4net config and a curl test against the intake",
+      "Analyzed the native profiler log and confirmed the log4net hooks were attached",
+      "Noticed the screenshot was a generic quickstart sample and asked for a test using the real key and URL",
+      "Pointed out that the NHibernate.SQL logger had its appender-ref commented out and asked which logger the messages use",
+      "Asked for the managed tracer log after the native log was provided instead",
+      "Proposed a second file appender on the root logger with Agent file tailing as a workaround",
+      "Asked for an Agent flare and file growth confirmation in case the workaround failed",
+      "Closed the ticket after the customer confirmed the workaround worked"
+    ],
+    "key_questions": [
+      "Can you send the managed tracer log from the same debug run?",
+      "Can you test the actual intake URL with your real API key?",
+      "Which logger do the NHibernate SQL messages actually go through?",
+      "Does the custom forwarding appender wrap the RemotingAppender?"
+    ],
+    "communication": [
+      "Split the multi-topic ticket by answering the easy questions inline and focusing on the main issue. Explained what the native log can and cannot show and why the managed log was needed. Gave a concrete XML snippet for the workaround, and listed fallback diagnostics (an Agent flare and file growth confirmation) if it failed. Was candid that the root cause was still under investigation."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

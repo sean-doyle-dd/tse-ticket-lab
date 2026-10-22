@@ -1,0 +1,78 @@
+{
+  "id": "synthetics-d-c188452b",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-08-14",
+  "topic": "Synthetics browser and API test retries (fast retries) not triggering after failures",
+  "product_area": "Synthetics - test retries / private location",
+  "environment": [
+    "Synthetics browser tests",
+    "Synthetics API tests",
+    "Synthetics private location"
+  ],
+  "symptom_pattern": "Fast retries stopped working for browser and API tests starting on one day, for both manual and scheduled runs. The tests failed with 'Cannot locate element' and were never retried. The test was configured to retry twice after a failure, and the customer reported no recent configuration changes.",
+  "root_cause": "A Datadog-side problem in the internal data flow. The thread says the initial test failure result was not propagated to the service that evaluates and triggers retries, so no retry was queued. The retry configuration itself was correct and had worked on earlier dates. The support engineer pointed to the result ingestion pipeline and escalated to engineering.",
+  "resolution_path": [
+    "Support asked for an example failing test and whether anything had changed recently (retry conditions, schedule, private location).",
+    "The customer confirmed no recent changes and that the tests run on a private location.",
+    "Support reviewed the test configuration and result explorer, which showed failures with no retries on both scheduled and manual runs.",
+    "Support checked backend logs. They showed the retry did not trigger on the affected day but had worked on earlier dates.",
+    "Support escalated to engineering as a likely issue in Datadog's result ingestion pipeline.",
+    "The customer later confirmed the issue was resolved and automatic retries were working again."
+  ],
+  "info_needed": [
+    "Link to an affected test where retries do not work",
+    "Whether the test failed outright or was not retried at all",
+    "Any recent changes to retry conditions, schedule or private location",
+    "An example API test showing the same missing-retry behavior"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you send a link to a browser test where the retry option is not working, and does the test fail or is it not retried even once?",
+      "customer_answer": "Shared an example test. Said more tests were failing and that manual and scheduled runs both showed no retries."
+    },
+    {
+      "tse_question": "Did you recently change the test configuration, such as the retry condition, scheduling time or private location?",
+      "customer_answer": "Nothing was changed. The tests had been running normally, but no failed test was retried after 2 attempts. All tests run on a private location."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, somewhat terse",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Error: Cannot locate element",
+    "In case of failure retry test 2 times with 2000ms of wait between failures"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer first gathered an example test and checked for recent changes. Backend log analysis then showed the retry was never queued on the affected day, and the engineer escalated to engineering.",
+    "steps": [
+      "Asked for a link to an affected test and clarified whether the test failed or was never retried.",
+      "Asked about recent changes to retry conditions, schedule or private location.",
+      "Reviewed the test configuration and the result explorer.",
+      "Noted that the failure type (element not found) should have triggered a retry.",
+      "Checked backend logs and compared the affected day with earlier days when retries worked.",
+      "Escalated to engineering and told the customer the ticket would stay open for updates."
+    ],
+    "key_questions": [
+      "Can you send a link to the test where retry is not working?",
+      "Did you change anything recently, such as retry condition, schedule or private location?"
+    ],
+    "communication": [
+      "Explained in plain terms what the logs showed, including that the configuration was fine and the failure result did not reach the retry service. Said the issue was escalated and that the ticket would stay open for updates."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-08"
+  }
+}

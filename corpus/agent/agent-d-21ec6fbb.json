@@ -1,0 +1,106 @@
+{
+  "id": "agent-d-21ec6fbb",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-09-29",
+  "topic": "Suspected intake outage: HTTP timeouts and no-data monitors, traced to connection resets on the Agent forwarder path",
+  "product_area": "Agent / forwarder connectivity (Kubernetes, Cluster Agent)",
+  "environment": [
+    "Kubernetes (AKS) with Datadog Agent and Cluster Agent deployed via Helm",
+    "Agent 7.83.2",
+    "EU site",
+    "Cluster Agent submitting statefulset and deployment metrics behind the customer's monitors"
+  ],
+  "symptom_pattern": "For about 35 minutes on one day, the customer saw an increased rate of HTTP timeouts from their Agents to the Datadog EU intake. Several monitors fired on no data. The status page showed no incident. Agent logs in Datadog showed 'Client.Timeout exceeded while awaiting headers' on metrics series submission and 'Too many errors for endpoint ... retrying later'.",
+  "root_cause": "No Datadog outage was found. The thread attributes the symptom to brief 'connection reset by peer' events on already-established connections to the EU intake load balancer IP. These also appeared on other days and on every Agent examined. The TSE's best explanation was an idle connection silently dropped by an intermediary on the customer's AKS egress path (Azure Load Balancer or NAT Gateway, 4 minute default idle timeout) before the Agent reused it. This was never confirmed with logs from the day itself. The leader cluster-agent's text logs had rotated past that date, and its lifetime counters showed a low background failure rate (about 0.025 percent of sends), not a distinct event.",
+  "resolution_path": [
+    "Checked the status page history and the internal incident tracker for the reported window and found no incident",
+    "Explained that the versioned Agent intake hostname is standard Agent traffic",
+    "Collected flares from a regular Agent and from cluster agents, then from the leader cluster-agent",
+    "Found a single reset event in the window on one cluster agent, which the forwarder retried with no permanent drops",
+    "Found the same reset pattern on other days, which pointed to connection resets at the load balancer layer rather than an outage",
+    "Checked CPU, memory and load on the node and found them normal, ruling out resource pressure",
+    "Recommended the customer check whether their Azure NAT Gateway or outbound load balancer rule is still on the 4 minute idle timeout default",
+    "Separately recommended disabling container image collection and SBOM container image collection if not needed, to remove 'channel is full' warnings",
+    "Customer accepted the explanation and said they would continue the investigation on their side"
+  ],
+  "info_needed": [
+    "Flare from an affected host",
+    "Org public ID to check intake-side success and error rates",
+    "Agent log lines from the incident window showing the exact error type",
+    "Flares and monitor links for other hosts whose monitors fired no data",
+    "Flare from the leader cluster-agent pod"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you send a flare from one of the affected hosts, along with your org public ID?",
+      "customer_answer": "The customer sent flares from several hosts, a regular Agent and two cluster agents, using the CLI. They picked the cluster agent with the most errors."
+    },
+    {
+      "tse_question": "Can you check the current agent.log on the host and paste the section covering the incident window, so we can see the exact error?",
+      "customer_answer": "The Agents run in Kubernetes so there is no agent.log. They searched Agent logs in Datadog instead and pasted timeout and 'too many errors' lines."
+    },
+    {
+      "tse_question": "Can you pull flares from one or two other hosts whose monitors fired no data, and send the monitor links?",
+      "customer_answer": "The customer shared three monitors that fired in the window and uploaded flares from two more hosts."
+    },
+    {
+      "tse_question": "Can you send a flare from the leader cluster-agent pod, since it submits the metrics behind your alerts?",
+      "customer_answer": "The customer uploaded a flare from that pod and said they would look into the suggestions."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, factual, collaborative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "net/http: request canceled (Client.Timeout exceeded while awaiting headers)",
+    "error while sending transaction, rescheduling it",
+    "connection reset by peer",
+    "unexpected EOF",
+    "TLS handshake timeout",
+    "channel is full",
+    "sudo datadog-agent flare",
+    "datadog: containerImageCollection: enabled: false sbom: containerImage: enabled: false"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/configuration/network/",
+    "https://docs.datadoghq.com/agent/troubleshooting/send_a_flare/",
+    "https://docs.datadoghq.com/containers/monitoring/container_images/#enable-image-collection"
+  ],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The TSE first ruled out a Datadog-side incident, then used flares from several Agents to look for a connectivity pattern. They compared the reported window with other days to show the resets were a recurring background pattern, not a one-off event. They ended with a concrete next step on the customer's network path.",
+    "steps": [
+      "Checked the status page and the internal incident tracker for the reported window",
+      "Explained that the hostname in the timeouts is standard Agent intake traffic",
+      "Requested a flare and the org public ID, and asked for the incident-window agent.log section",
+      "Reviewed the three flares and found one reset event in the window on a cluster agent",
+      "Compared against other days and found the same reset pattern, concluding it was not specific to the 26th",
+      "Asked for flares and monitor links from other hosts that fired no data",
+      "Checked node CPU, memory and load for the window and found them normal",
+      "Suggested checking the Azure NAT Gateway or load balancer idle timeout and added a side recommendation to disable image collection",
+      "Requested the leader cluster-agent flare, then used its lifetime forwarder counters to show a low, steady failure rate",
+      "Closed by naming the idle timeout check as the next step on the customer's side"
+    ],
+    "key_questions": [
+      "Can you check agent.log for the incident window and paste the section, so we can see where the failure happened (DNS, TCP connect or TLS)?",
+      "Can you send flares and monitor links from other hosts whose monitors fired no data?",
+      "Can you send a flare from the leader cluster-agent pod that submits the metrics behind the alerts?"
+    ],
+    "communication": [
+      "Stated up front what was checked and what was found. Warned that a flare taken days later might not cover the incident window because of log rotation. Told the customer plainly when the evidence was weak, for example that one reset on one host would not explain 35 minutes of no data, and that log lines for the day were unavailable. Separated the cause under investigation from a side finding about image collection. Linked docs for each recommendation."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

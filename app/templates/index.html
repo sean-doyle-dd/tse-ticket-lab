@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Generate a practice ticket</h1>
+  <p class="muted">Pick a spec and a difficulty. Claude rebuilds a recent real solved ticket from that spec as a practice case, anonymized and checked so every technical detail traces back to the original. You work it like a real one: ask questions, reproduce it in the sandbox, propose a fix. Then you get graded.</p>
+</section>
+
+{% if not seed_counts %}<div class="callout callout-warn"><strong>No real tickets loaded yet.</strong> Run <code>python3 tools/refresh_corpus.py --spec apm</code> on a laptop with Claude Code, review the staged seeds and promote them. Practice tickets are only built from real solved tickets.</div>{% endif %}
+{% if llm_problem %}<div class="callout callout-warn"><strong>Claude isn't configured:</strong> {{ llm_problem }}</div>{% endif %}
+
+{% set first_spec = (SPECS.keys() | select("in", seed_counts) | first) %}
+<form id="generate-form" class="generator" data-difficulty-counts='{{ difficulty_counts | tojson }}'>
+  <fieldset>
+    <legend>1. Spec</legend>
+    <div class="spec-grid">
+      {% for key, spec in SPECS.items() %}
+      <label class="spec-card {{ 'disabled' if not seed_counts.get(key) }}">
+        <input type="radio" name="spec" value="{{ key }}" {{ 'disabled' if not seed_counts.get(key) }} {{ 'checked' if key == first_spec }}>
+        <span class="spec-name">{{ spec.label }}</span>
+        <span class="spec-blurb">{{ spec.blurb }}</span>
+        <span class="spec-meta">
+          {{ seed_counts.get(key, 0) }} real ticket{{ '' if seed_counts.get(key) == 1 else 's' }}{% if seed_counts.get(key) %} ({% for d, n in difficulty_counts[key].items() if n %}{{ n }} {{ d }}{{ ", " if not loop.last }}{% endfor %}){% endif %} · {{ sandbox_counts.get(key, 0) or "no" }} sandbox template{{ '' if sandbox_counts.get(key) == 1 else 's' }}
+          {% if stats.get(key) %}· your avg {{ stats[key].avg }}{% endif %}
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>2. Difficulty</legend>
+    <div class="segmented" role="radiogroup">
+      {% for key, d in DIFFICULTIES.items() %}
+      <label class="seg seg-{{ key }}">
+        <input type="radio" name="difficulty" value="{{ key }}" {{ 'checked' if key == 'medium' }}>
+        <span class="seg-label">{{ d.label }}</span>
+        <span class="seg-blurb">{{ d.blurb }}</span>
+        <span class="seg-none">No real tickets at this level yet for this spec</span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <div class="generator-actions">
+    <button class="btn btn-primary btn-lg" type="submit" {{ 'disabled' if llm_problem }}>Generate ticket</button>
+    <span id="generate-error" class="error-text" role="alert"></span>
+  </div>
+</form>
+
+{% if recent %}
+<section class="panel">
+  <div class="panel-head"><h2>Your recent tickets</h2><a href="{{ url_for('ui.history') }}">View all</a></div>
+  {% include "_ticket_table.html" %}
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='index.js') }}"></script>{% endblock %}

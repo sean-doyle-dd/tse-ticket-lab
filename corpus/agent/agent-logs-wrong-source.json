@@ -1,0 +1,44 @@
+{
+  "id": "agent-logs-wrong-source",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-10-09",
+  "topic": "NGINX logs arrive but aren't parsed",
+  "product_area": "Agent / Log collection",
+  "environment": [
+    "Container log collection via Autodiscovery labels",
+    "Log pipelines in Datadog"
+  ],
+  "symptom_pattern": "Web server logs show up in Log Explorer as raw text with no status code or URL facets, so a dashboard of 5xx counts is empty.",
+  "root_cause": "The log config sets source to a custom value instead of 'nginx', so the NGINX integration pipeline (which matches on source:nginx) never processes the logs.",
+  "resolution_path": [
+    "Open a log and check its source attribute",
+    "Compare with the integration pipeline's filter",
+    "Set source: nginx in the log config (or clone the pipeline for the custom source)"
+  ],
+  "info_needed": [
+    "sample log JSON",
+    "the ad.logs label or log config",
+    "pipeline list"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What source does one of these logs have?",
+      "customer_answer": "source:webserver, we picked that name ourselves."
+    },
+    {
+      "tse_question": "Do you see an NGINX pipeline in Logs \u2192 Pipelines?",
+      "customer_answer": "Yes, it was auto-installed, it's enabled."
+    }
+  ],
+  "customer_style": {
+    "tone": "calm, analytical",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "agent/nginx-check"
+}

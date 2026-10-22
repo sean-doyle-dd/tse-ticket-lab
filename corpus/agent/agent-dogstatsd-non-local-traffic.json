@@ -1,0 +1,44 @@
+{
+  "id": "agent-dogstatsd-non-local-traffic",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-08-30",
+  "topic": "DogStatsD packets from other containers dropped",
+  "product_area": "Agent / DogStatsD",
+  "environment": [
+    "Containerised Agent 7",
+    "Several app containers on the same Docker network"
+  ],
+  "symptom_pattern": "Custom metrics from every application container are missing, although the apps are configured with the Agent's service name. Metrics sent from inside the Agent container with a test command work.",
+  "root_cause": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC is false (or unset where the base config disables it), so the Agent's DogStatsD server only listens on localhost and drops packets coming from other containers.",
+  "resolution_path": [
+    "Compare a test packet sent from inside the Agent container with one from an app container",
+    "Check dogstatsd_non_local_traffic in agent config",
+    "Set DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true and restart the Agent"
+  ],
+  "info_needed": [
+    "Agent env vars/datadog.yaml",
+    "agent status DogStatsD stats",
+    "whether a test metric from inside the Agent container works"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Does a metric sent from inside the Agent container show up?",
+      "customer_answer": "Yes, I ran echo into nc inside the agent container and that metric appeared."
+    },
+    {
+      "tse_question": "Can you share the Agent's environment variables (minus the API key)?",
+      "customer_answer": "We have DD_DOGSTATSD_NON_LOCAL_TRAFFIC=false because our security team said to lock things down."
+    }
+  ],
+  "customer_style": {
+    "tone": "cooperative, technical, slightly defensive about security settings",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "agent/dogstatsd-app"
+}

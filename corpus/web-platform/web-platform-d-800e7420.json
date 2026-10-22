@@ -1,0 +1,103 @@
+{
+  "id": "web-platform-d-800e7420",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-09-09",
+  "topic": "Combined APM service map and Data Streams Monitoring topology on a dashboard or the Service Map page",
+  "product_area": "Dashboards / APM Service Map / Data Streams Monitoring",
+  "environment": [
+    "APM and Data Streams Monitoring both enabled",
+    "Queue-based messaging pipeline with inferred queue services",
+    "Proof-of-concept environment"
+  ],
+  "symptom_pattern": "Customer sees APM service dependencies on the Service Map page and DSM pathways on the Data Streams Monitoring page, but wants one merged topology. They like the APM Service page Dependencies tab, which shows the service next to its data-stream targets. They want that combined view on a dashboard or the Service Map page, with DSM throughput detail on inferred queue nodes.",
+  "root_cause": "This is a product capability gap, not a defect. The Service Map page renders only APM-instrumented services and service-to-service dependencies, with no option to overlay DSM pathways or queue health. The Dependencies tab on the APM Service page toggles between the APM map and the DSM map rather than merging them. A Topology Map widget uses one data source per widget (Service Map or Data Streams), so a single merged graph is not available. Inferred queue nodes do not show DSM throughput.",
+  "resolution_path": [
+    "Explained that a Topology Map widget on a dashboard can use Data Streams as its data source, with an env filter and an optional service to center the map.",
+    "Suggested adding a second Topology Map widget using the Service Map data source on the same dashboard, so the APM and DSM views sit side by side.",
+    "Suggested graphing the DSM metrics data_streams.latency, data_streams.kafka.lag_seconds and data_streams.payload_size on the dashboard, and exporting a DSM pathway from the Measure tab to a dashboard.",
+    "Explained that the Service Map page cannot show DSM pathways, and that the combined view the customer saw is the Dependencies tab toggle on the APM Service page.",
+    "Mentioned that Agent 7.60.0 or later automatically infers dependencies such as queues and databases as their own nodes.",
+    "After the customer confirmed that side-by-side maps were not enough, collected the business justification for a feature request.",
+    "Filed an internal escalation, which was approved and became a feature request for a single topology combining APM dependencies and DSM pathways, including DSM detail on inferred queue nodes and the same view on a dashboard.",
+    "Told the customer the combined graph is not available today, set expectations on product review timing, and closed the ticket with follow-up options."
+  ],
+  "info_needed": [
+    "Screenshot of the Dependencies tab view they want reproduced",
+    "Whether a single merged graph is a firm requirement or both maps on one dashboard would suffice",
+    "Datadog site and org, env (and second primary tag if used), and queue technology",
+    "Agent and tracing library versions",
+    "Problem being solved, workflow impact, current workaround and its shortcomings, and impact of not having the feature"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share a screenshot or link of the Dependencies tab view you would like reproduced?",
+      "customer_answer": "They provided screenshots showing the APM service connected to the inferred queue service, which also appears in the DSM view next to it."
+    },
+    {
+      "tse_question": "Do you need one single merged graph, or would the APM map and DSM map together on one dashboard suffice?",
+      "customer_answer": "They want the graphs merged, or at least DSM metric details such as message and topic throughput shown on the inferred DSM service. Ideally the complete dependencies view would also be on a dashboard."
+    },
+    {
+      "tse_question": "What problem are you and the customer trying to solve with this view?",
+      "customer_answer": "A single end-to-end dependency view combining APM service dependencies with DSM pathways, including queues and topics, to understand the whole application flow in one place."
+    },
+    {
+      "tse_question": "How would having it improve the team's workflow?",
+      "customer_answer": "Faster troubleshooting by correlating service dependencies and messaging activity in one topology view, without switching between APM and DSM pages."
+    },
+    {
+      "tse_question": "How are you working around it today, and why isn't that sufficient?",
+      "customer_answer": "They review the Service Map and DSM topology separately, or place both topology widgets side by side on a dashboard. Neither presents the full dependency chain as one connected flow."
+    },
+    {
+      "tse_question": "What impact does not having it have on the team or the wider organisation?",
+      "customer_answer": "Extra navigation and manual investigation effort during troubleshooting, which increases the time to understand dependencies and locate issues across the application and messaging layers."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, business-focused, relaying a downstream customer's request",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Topology Map widget accepts Data Streams as a data source",
+    "data_streams.latency, data_streams.kafka.lag_seconds, and data_streams.payload_size"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/dashboards/widgets/topology_map/",
+    "https://docs.datadoghq.com/tracing/services/inferred_services/?tab=agentv7600"
+  ],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer treated this as a product capability question. They gave the closest supported workaround and stated the limitation clearly. When the workaround proved insufficient, they collected business-impact details and filed a feature request.",
+    "steps": [
+      "Confirmed the request was a capability question, not a defect.",
+      "Described the dashboard option using Topology Map widgets with Data Streams and Service Map data sources.",
+      "Listed DSM metrics that can be graphed and the option to export a DSM pathway to a dashboard.",
+      "Explained why the Service Map page cannot show DSM data and where the combined toggle view lives.",
+      "Pointed to inferred services in Agent 7.60.0 or later as a partial fit.",
+      "Asked for a screenshot, whether a merged graph was a firm requirement, and environment and version details.",
+      "After receiving screenshots, confirmed the merged view is unsupported and asked the feature-request questions.",
+      "Filed the internal escalation and feature request, then updated the customer with expectations and follow-up options and closed the ticket."
+    ],
+    "key_questions": [
+      "Can you share a screenshot or link of the Dependencies tab view you would like reproduced?",
+      "Do you need one single merged graph, or would the APM and DSM maps together on one dashboard suffice?",
+      "What problem are you trying to solve, how would this improve the workflow, what is your current workaround and why is it insufficient, and what is the impact of not having it?"
+    ],
+    "communication": [
+      "Opened with the supported option before the limitation. Gave concrete widget setup steps and named the DSM metrics. Linked documentation. Stated plainly what is not supported. Gave a structured list of questions for the feature request. The closing message set expectations that the request may not be implemented, and named the follow-up routes."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

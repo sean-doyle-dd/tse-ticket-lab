@@ -1,0 +1,32 @@
+worker_processes 1;
+events { worker_connections 256; }
+
+http {
+    access_log /dev/stdout;
+    error_log /dev/stderr warn;
+
+    server {
+        listen 80;
+        location / {
+            default_type text/plain;
+            return 200 "storefront web ok\n";
+        }
+        location /missing { return 404; }
+    }
+
+    # Status endpoint for the Datadog nginx check.
+    server {
+        listen 81;
+{%- if p.STUB_STATUS == "enabled" %}
+        location /nginx_status/ {
+            stub_status;
+{%- if p.STATUS_ACL == "localhost_only" %}
+            allow 127.0.0.1;
+            deny all;
+{%- else %}
+            allow all;
+{%- endif %}
+        }
+{%- endif %}
+    }
+}

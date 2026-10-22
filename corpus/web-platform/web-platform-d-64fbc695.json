@@ -1,0 +1,85 @@
+{
+  "id": "web-platform-d-64fbc695",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-14",
+  "topic": "First-time SSO users not receiving the email verification code",
+  "product_area": "Authentication / SAML SSO / JIT provisioning",
+  "environment": [
+    "Datadog EU site",
+    "SAML-only login with SAML Strict",
+    "Microsoft Entra ID as identity provider",
+    "JIT provisioning enabled for the company email domain",
+    "IdP-initiated login disabled",
+    "No custom subdomain"
+  ],
+  "symptom_pattern": "New users onboarding to SAML SSO started from the generic Datadog login page (by_email) and never received the 8-digit verification code, so they could not finish their first login. An earlier JIT-created user had logged in successfully.",
+  "root_cause": "The user did not yet have an active Datadog account. The generic email-verification login flow only sends a code to an existing active user, so no email was generated. This was not an email-delivery problem. The user needed to start from the organization-specific SAML login URL, which identifies the org and SAML config and creates the account through JIT.",
+  "resolution_path": [
+    "Confirmed the org's SAML, JIT and certificate configuration was healthy and that a previous user had been created through JIT",
+    "Asked for one affected user's login URL, attempt time and a screenshot of the code prompt",
+    "Found the attempt in the SAML service logs, which showed the code was not sent because no active user existed for that handle",
+    "Asked the user to log in with the organization-specific SAML login URL instead of the generic login page",
+    "The user logged in through that URL, was created by JIT provisioning and confirmed the login worked"
+  ],
+  "info_needed": [
+    "Exact email address used by an affected user",
+    "Exact URL used to start the login",
+    "Approximate time of the attempt, including timezone",
+    "Screenshot of the page requesting the verification code"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could one affected user retry the login and share the email address, the URL used to start login, the approximate time with timezone, and a screenshot of the code page?",
+      "customer_answer": "The customer supplied the generic by_email login URL, the user's email address and the attempt time."
+    },
+    {
+      "tse_question": "Could the affected user try logging in with the organization-specific SAML link instead?",
+      "customer_answer": "The customer tried it and confirmed it worked."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and cooperative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Did not send login email verification code [...] there is no active user with that handle",
+    "Login method: SAML Strict",
+    "Is IdP-initiated login enabled? No",
+    "The generic email-verification flow only sends a code to an existing active Datadog user.",
+    "The 8-digit code is sent before the SAML flow begins."
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer reviewed the org's SAML and JIT setup, then asked for one concrete failed attempt. They found it in the logs, showed that no email was ever generated, and redirected the user to the org-specific SAML URL.",
+    "steps": [
+      "Checked the SAML configuration, certificate validity, JIT settings and user status",
+      "Wrote down the expected first-time login flow and the step where the code is issued",
+      "Asked for a single affected user's email, login URL, attempt time and a screenshot",
+      "Located the attempt in the SAML service logs and found the 'no active user' message",
+      "Concluded this was not an email-delivery issue",
+      "Sent the org-specific SAML login URL and explained what should happen",
+      "Asked the customer to report back, with attempt time and a screenshot if it still failed",
+      "Closed the ticket after the customer confirmed success"
+    ],
+    "key_questions": [
+      "Which exact URL did the affected user start the login from?",
+      "What email address, and at what approximate time, was the attempt made?"
+    ],
+    "communication": [
+      "Gave a clear reason why no email was sent, supplied the exact link to use and the expected result, and said what to send back if it still failed. Asked the customer not to share the verification code or credentials."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "id": "synthetics-d-d94fa71b",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-08-24",
+  "topic": "Browser test runs triggered manually from a Synthetics Private Location disappear without results",
+  "product_area": "Synthetics - Private Locations (browser tests)",
+  "environment": [
+    "Synthetics browser test",
+    "Private Location image 1.71.0 (latest at the time)",
+    "Manual test run triggered from a Private Location"
+  ],
+  "symptom_pattern": "A manually triggered browser test run on a Private Location never shows results and disappears after more than 10 minutes. It still reproduced on the latest Private Location image after an earlier report.",
+  "root_cause": "A known bug in the Private Location image, introduced in version 1.64. Engineering was investigating it, and no fix release date was available when the ticket closed.",
+  "resolution_path": [
+    "The customer re-checked the latest Private Location image and could still reproduce the issue.",
+    "The TSE confirmed Engineering was actively working on a fix and that the behavior was introduced in version 1.64.",
+    "The TSE recommended the workaround of running Private Location version 1.63 or earlier, where the issue is not present.",
+    "The TSE said no additional traces were needed while the bug remained reproducible.",
+    "The TSE agreed to notify the customer when a fix is released so they can validate it, and closed the ticket at the customer's request."
+  ],
+  "info_needed": [
+    "Whether anything had changed since the previous communication",
+    "Private Location logs from a time window where the issue can be observed, if the Private Location had been upgraded"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Have there been any new developments or changes since the last communication, so the latest information can be told apart from earlier escalations?",
+      "customer_answer": "Nothing had changed. The customer had only checked the new Private Location image version and reproduced the failure, so they opened the ticket to ask about the bug's status."
+    },
+    {
+      "tse_question": "If you upgraded the Private Location, could you collect and share its logs from a time when the issue is visible?",
+      "customer_answer": "The customer declined for now. They said new traces make no sense while the bug still exists, and they asked for roadmap details on the fix instead."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, direct, status-seeking",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "synthetics/private-location",
+  "evidence": [
+    "Testrun just disappears without any results after more than 10 min",
+    "Test Run not showing when triggered manually from Private Location",
+    "version 1.71.0 of private location image",
+    "this behavior was introduced in version 1.64",
+    "use version 1.63 or earlier"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE asked what had changed since the last escalation and requested Private Location logs. When the customer explained the bug still reproduced, the TSE gave the identified regression version, a workaround and a clear statement on the fix status, then closed the ticket.",
+    "steps": [
+      "Acknowledged the follow-up and started the investigation.",
+      "Asked whether anything had changed since the last communication and requested Private Location logs if the Private Location had been upgraded.",
+      "Received the customer's explanation that the bug still reproduced on the latest image and that they wanted its status.",
+      "Replied with the version where the behavior was introduced (1.64), the workaround (1.63 or earlier), and that no fix date was available.",
+      "Told the customer that no extra traces were needed.",
+      "Promised to proactively notify the customer when a fix was released.",
+      "Closed the ticket at the customer's request."
+    ],
+    "key_questions": [
+      "Have there been any new developments or changes since our last communication?",
+      "If you have upgraded your Private Location, could you share PL logs from a timeframe where the issue can be observed?"
+    ],
+    "communication": [
+      "Gave a clear workaround with the version boundary and set expectations about the missing fix date. Explained that extra traces were not needed once the bug was confirmed as known. Promised to follow up proactively when a fix was released."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

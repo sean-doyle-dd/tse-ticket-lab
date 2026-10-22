@@ -1,0 +1,53 @@
+id: agent/dogstatsd-app
+title: DogStatsD custom metrics app
+description: >
+  A Python "checkout" service sending custom metrics (count, gauge, histogram, distribution)
+  over DogStatsD/UDP to a containerised Agent 7. Good for "my custom metrics aren't showing up",
+  missing percentiles, malformed tags and wrong-site/API-key style tickets.
+services: [datadog-agent, checkout]
+editable: [config/agent.env, config/app.env]
+params:
+  STATSD_HOST:
+    description: Host the app's DogStatsD client sends to (app.env STATSD_HOST)
+    default: datadog-agent
+    choices:
+      datadog-agent: healthy, the Agent's service name
+      localhost: "broken: inside the app container localhost is the app itself, so packets are silently lost"
+      127.0.0.1: "broken: same as localhost"
+  STATSD_PORT:
+    description: UDP port the app sends to (app.env STATSD_PORT)
+    default: "8125"
+    choices:
+      "8125": healthy
+      "8126": "broken: that's the APM trace port (TCP); metrics are silently lost"
+      "8215": "broken: typo'd port; metrics are silently lost"
+  NON_LOCAL_TRAFFIC:
+    description: Agent DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+    default: "true"
+    choices:
+      "true": healthy, accepts packets from other containers
+      "false": "broken: the Agent only listens on localhost, so packets from the app container are dropped"
+  USE_DOGSTATSD:
+    description: Agent DD_USE_DOGSTATSD
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: DogStatsD server disabled; agent status shows no DogStatsD section"
+  METRIC_TAGS:
+    description: Tags the app attaches to every metric (app.env METRIC_TAGS)
+    default: "env:sandbox,team:payments,service:checkout"
+    choices:
+      "env:sandbox,team:payments,service:checkout": healthy key:value tags
+      "env=sandbox,team=payments,service=checkout": "broken: key=value tags arrive as single-value tags like env=sandbox, so filtering by env:sandbox finds nothing"
+  HISTOGRAM_PERCENTILES:
+    description: Agent DD_HISTOGRAM_PERCENTILES (which percentiles histograms produce)
+    default: "0.95"
+    choices:
+      "0.95": healthy, checkout.latency.95percentile exists
+      "0.99": "broken: only .99percentile is produced, so dashboards querying .95percentile go empty after an Agent config change"
+  SITE:
+    description: Datadog site the Agent submits to
+    default: from_env
+    choices:
+      from_env: healthy, uses DD_SITE from .env (default datadoghq.com)
+      wrong_site: "broken: the Agent is pinned to us5.datadoghq.com, so the API key is rejected as invalid on that site"

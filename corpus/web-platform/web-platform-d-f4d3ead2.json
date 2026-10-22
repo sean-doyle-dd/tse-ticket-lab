@@ -1,0 +1,79 @@
+{
+  "id": "web-platform-d-f4d3ead2",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-07-23",
+  "topic": "SSO login lockout after enabling SAML group mappings (Okta)",
+  "product_area": "Account management / SAML SSO group mappings",
+  "environment": [
+    "Okta as SAML identity provider",
+    "SAML group mappings enabled",
+    "SCIM provisioning being enabled in a parent org",
+    "Password login enabled for all users in the org"
+  ],
+  "symptom_pattern": "After the customer tried to enable SCIM provisioning and SAML group mappings, users were locked out of the org. Login showed 'unknown user. there are no mapped roles for this user.' All admins used SSO, so none could log in to disable group mappings.",
+  "root_cause": "The Okta SAML app was missing the Group Attribute Statement, so no group attributes were sent to Datadog. With group mappings enabled and no matching roles, Datadog removed all roles from the user's account. This was a group mapping problem, not a SCIM problem.",
+  "resolution_path": [
+    "Asked for the exact error message to tell whether the problem came from SCIM or group mappings",
+    "Identified it as a group mapping issue: with no matching roles, group mapping removes all roles from the account",
+    "Suggested that another admin log in with username and password, disable group mappings, and restore permissions",
+    "Confirmed password login was enabled org-wide and pointed to the 'Forgot Password?' workflow for users without a password",
+    "Advised the customer to change the Okta configuration to send the group attributes by adding the missing Group Attribute Statement: member_of | Unspecified | matchesRegex .*",
+    "Confirmed the customer could log in again"
+  ],
+  "info_needed": [
+    "Exact error message shown at login",
+    "Whether password login is enabled for the org's users"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is there a specific error message you're seeing, so we can tell whether this is SCIM or group mappings?",
+      "customer_answer": "They saw an 'unknown user, no mapped roles' error and said they had mapped the role via UUID but something was wrong."
+    },
+    {
+      "tse_question": "Suggested having another admin log in with username and password to disable group mappings.",
+      "customer_answer": "They said all of their admins use SSO."
+    }
+  ],
+  "customer_style": {
+    "tone": "concise, stressed but cooperative",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "unknown user. there are no mapped roles for this user.",
+    "member_of | Unspecified | matchesRegex .*",
+    "Forgot Password?"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer asked for the exact error to separate SCIM from group mapping, then explained the behavior behind the lockout and gave a workaround using password login. They then guided the customer to fix the missing Okta group attribute statement and confirmed login worked.",
+    "steps": [
+      "Greeted the customer and reviewed the account and existing tickets",
+      "Asked for the specific error message",
+      "Diagnosed the issue as group mapping rather than SCIM and explained why roles were removed",
+      "Recommended password login by another admin to disable group mappings and restore permissions",
+      "Checked the org settings and confirmed password login was enabled for all users",
+      "Explained the 'Forgot Password?' workflow for users with no password set",
+      "Advised the Okta change to add the missing Group Attribute Statement",
+      "Confirmed the customer could log in and marked the ticket for solve"
+    ],
+    "key_questions": [
+      "Is there a specific error message you're seeing, so we can tell whether this is SCIM or group mappings?"
+    ],
+    "communication": [
+      "Explained why the lockout happened (no matching roles causes group mapping to remove all roles). Gave a clear workaround. Checked the org's password login setting before answering the customer's objection that everyone uses SSO. Gave the exact attribute statement value to configure."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-07"
+  }
+}

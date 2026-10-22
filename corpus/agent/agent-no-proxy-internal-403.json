@@ -1,0 +1,44 @@
+{
+  "id": "agent-no-proxy-internal-403",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-06-19",
+  "topic": "Internal scrape gets 403 after adding proxy",
+  "product_area": "Agent / Proxy + integrations",
+  "environment": [
+    "Agent 7 with proxy configured",
+    "Internal HTTP endpoint scraped by an integration"
+  ],
+  "symptom_pattern": "As soon as the proxy was configured so the Agent could reach Datadog, an integration that scrapes an internal endpoint started failing with HTTP 403 from the proxy.",
+  "root_cause": "With proxy settings applied globally, integration HTTP requests to internal hosts are also routed through the proxy, whose ACL only allows Datadog domains. The internal host isn't listed in proxy.no_proxy.",
+  "resolution_path": [
+    "Check the integration error (403 with proxy headers)",
+    "Add the internal host/IP to proxy.no_proxy (or set skip_proxy in the instance)",
+    "Restart and re-run the check"
+  ],
+  "info_needed": [
+    "integration error text",
+    "proxy config including no_proxy",
+    "proxy ACL rules"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is the 403 coming from the exporter or the proxy?",
+      "customer_answer": "The error page says squid, so I guess the proxy?"
+    },
+    {
+      "tse_question": "Do you have a no_proxy list configured?",
+      "customer_answer": "No, we only set http and https."
+    }
+  ],
+  "customer_style": {
+    "tone": "cooperative, a bit overwhelmed by networking details",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "agent/proxy-openmetrics"
+}

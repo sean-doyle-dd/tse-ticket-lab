@@ -1,0 +1,70 @@
+{
+  "id": "agent-d-7ab56a91",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-10-21",
+  "topic": "Reducing container usage via exclusion and disabling Cloud Network Monitoring",
+  "product_area": "Agent / Container Monitoring and Cloud Network Monitoring (billing and usage configuration)",
+  "environment": [
+    "Datadog Agent",
+    "OpenTelemetry hosts",
+    "Enterprise plan"
+  ],
+  "symptom_pattern": "A customer is billed for more containers and infrastructure hosts than their plan includes. They want to disable Network Monitoring and remove containers to get back within their included container allotment. Usage was roughly 1,700 to 2,000 running containers against an allotment of about 430 to 540, and host count was above the plan.",
+  "root_cause": "This was a how-to request, not a fault. Container usage far exceeded the pooled free allotment, which the thread says is 10 containers per infrastructure host. Network Monitoring was enabled on essentially all Agent hosts. The allotment also scales with host count, so reducing hosts would shrink it further.",
+  "resolution_path": [
+    "Explained the usage picture: container count against the pooled allotment, and hosts above the plan.",
+    "Advised deciding which workloads need visibility first, because most containers would need excluding if hosts drop to the plan level.",
+    "Gave container exclusion options. These are an Agent environment variable, a Helm value, the Operator env var, and a per-pod annotation (Agent 7.45+). Namespaces were suggested as the simplest way to exclude large groups.",
+    "Gave steps to disable Network Monitoring: system-probe.yaml for hosts, Helm and Operator settings for Kubernetes, and removing the env var for Docker or ECS.",
+    "Noted that container usage is measured hourly, so the change shows in the Plan & Usage page after the Agents restart with the new exclusions.",
+    "The customer said they were tuning the values and would report back. The thread never confirmed the outcome before it auto-closed."
+  ],
+  "info_needed": [
+    "Which namespaces, images or container names the customer wants to keep monitoring",
+    "Whether the customer intends to reduce host count back to the plan level"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "brief and cooperative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "DD_CONTAINER_EXCLUDE=\"kube_namespace:<namespace> image:<image_name> name:<container_name>\"",
+    "containerExclude: \"kube_namespace:<namespace> image:<image_name>\"",
+    "spec.override.nodeAgent.env",
+    "ad.datadoghq.com/exclude: \"true\"",
+    "/etc/datadog-agent/system-probe.yaml",
+    "network_config:",
+    "enabled: false",
+    "networkMonitoring:",
+    "DD_SYSTEM_PROBE_NETWORK_ENABLED=true"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer reviewed the account's container and host usage first. They then gave a usage summary and copy-pasteable steps for both container exclusion and disabling Network Monitoring across deployment types.",
+    "steps": [
+      "Reviewed current container and host usage against the plan",
+      "Summarized the allotment math and how it scales with host count",
+      "Listed container exclusion methods for the Agent env var, Helm, Operator and per-pod annotation",
+      "Listed Network Monitoring disable steps for hosts, Helm, Operator and Docker/ECS",
+      "Followed up to explain that usage is measured hourly and when the change appears in Plan & Usage"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Opened with a usage summary tied to the customer's account. Answered each of the customer's two questions under its own heading and covered several deployment types. Set expectations on when changes show in usage reporting. Told the customer to take the time they need."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

@@ -1,0 +1,12 @@
+## Fix your previous attempt
+A checker found technical claims in your previous attempt that the source seed doesn't support. Return the **same scenario** with only those claims fixed. For each one, delete it or replace it with something the seed actually says. Keep everything else exactly as it is. Don't rephrase other parts, and don't add new details.
+
+Problems:
+{% for p in problems %}
+- {{ p.where }}: "{{ p.claim }}" ({{ p.reason }})
+{%- endfor %}
+
+Previous attempt:
+```json
+{{ previous }}
+```

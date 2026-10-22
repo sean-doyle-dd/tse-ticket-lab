@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ s.ref }} · TSE Ticket Lab{% endblock %}
+{% block main_class %}container container-wide{% endblock %}
+{% block content %}
+<div id="ticket-app" data-id="{{ s.id }}" data-readonly="{{ 'true' if readonly else 'false' }}">
+
+  <!-- Generating -->
+  <section id="view-generating" class="generating" hidden>
+    <div class="spinner" aria-hidden="true"></div>
+    <h1>Writing your ticket…</h1>
+    <ol class="progress-steps">
+      <li data-step="0">Picking recent ticket patterns for this spec</li>
+      <li data-step="1">Designing the root cause and hidden facts</li>
+      <li data-step="2">Writing the customer's ticket and attachments</li>
+      <li data-step="3">Configuring a sandbox that reproduces it</li>
+    </ol>
+    <p class="muted">This usually takes about a minute.</p>
+  </section>
+
+  <!-- Failed -->
+  <section id="view-failed" class="hero" hidden>
+    <h1>Generation failed</h1>
+    <p id="failed-reason" class="muted"></p>
+    <a class="btn btn-primary" href="{{ url_for('ui.index') }}">Try again</a>
+  </section>
+
+  <!-- Ticket workspace -->
+  <div id="view-ticket" class="workspace" hidden>
+    <div class="ws-main">
+      <header class="ticket-head">
+        <div class="ticket-ref"><span class="mono" id="t-ref"></span><span class="pill" id="t-difficulty"></span><span class="tag" id="t-spec"></span><span class="status" id="t-status"></span></div>
+        <h1 id="t-subject"></h1>
+        <p id="t-provenance" class="provenance"></p>
+      </header>
+
+      <div id="grade-panel" class="grade" hidden></div>
+
+      <ol id="thread" class="thread" aria-live="polite"></ol>
+
+      <form id="composer" class="composer">
+        <label for="reply" class="sr-only">Your reply</label>
+        <textarea id="reply" rows="6" placeholder="Write your reply to the customer… (⌘/Ctrl+Enter to send)"></textarea>
+        <div class="composer-bar">
+          <span class="muted small" id="composer-hint">Replies are visible to the customer. Ask questions, request flares or logs, or propose a fix.</span>
+          <div class="composer-actions">
+            <button type="button" class="btn btn-ghost" id="btn-resolution" title="Send this reply and tell the customer it's your proposed fix. They'll try it and tell you whether it worked.">Send as proposed fix</button>
+            <button type="submit" class="btn btn-primary" id="btn-send">Send reply</button>
+          </div>
+        </div>
+        <div id="composer-error" class="error-text" role="alert"></div>
+      </form>
+    </div>
+
+    <aside class="ws-side">
+      <section class="card">
+        <h3>Requester</h3>
+        <div class="requester">
+          <span class="avatar avatar-lg" id="c-initial"></span>
+          <div><div id="c-name" class="strong"></div><div id="c-title" class="muted small"></div></div>
+        </div>
+        <dl class="kv">
+          <dt>Company</dt><dd id="c-company"></dd>
+          <dt>Timezone</dt><dd id="c-tz"></dd>
+          <dt>Priority</dt><dd id="t-priority"></dd>
+          <dt>Product area</dt><dd id="t-area"></dd>
+        </dl>
+      </section>
+      <section class="card">
+        <h3>Environment</h3>
+        <ul id="t-env" class="env-list"></ul>
+      </section>
+      <section class="card" id="sandbox-card">
+        <h3>Sandbox</h3>
+        <div id="sandbox-body"></div>
+      </section>
+      <section class="card" id="progress-card">
+        <h3>Investigation</h3>
+        <div class="meter"><div class="meter-fill" id="facts-meter"></div></div>
+        <p class="muted small" id="facts-text"></p>
+        <button class="btn btn-danger-ghost btn-block" id="btn-close" type="button">Close ticket &amp; get graded</button>
+        <p class="muted small">Closing reveals the answer key, so only close when you're done.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<dialog id="confirm-close" class="dialog">
+  <form method="dialog">
+    <h2>Close and grade this ticket?</h2>
+    <p class="muted">You won't be able to reply after this. The grader reviews the whole conversation against the answer key.</p>
+    <div class="dialog-actions">
+      <button value="cancel" class="btn btn-ghost">Keep working</button>
+      <button value="confirm" class="btn btn-primary">Close &amp; grade</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='ticket.js') }}"></script>{% endblock %}

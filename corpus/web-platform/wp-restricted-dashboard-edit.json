@@ -1,0 +1,44 @@
+{
+  "id": "wp-restricted-dashboard-edit",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-10-04",
+  "topic": "User with edit role can't modify a dashboard",
+  "product_area": "Web Platform / RBAC & granular access",
+  "environment": [
+    "Custom roles",
+    "Dashboards with restricted editing"
+  ],
+  "symptom_pattern": "A user with a role that includes dashboard write permission sees a read-only dashboard and can't save changes, while they can edit other dashboards.",
+  "root_cause": "That specific dashboard has granular access set so only certain roles/teams can edit it; the user's role isn't on its restriction list.",
+  "resolution_path": [
+    "Check the dashboard's permissions/share settings",
+    "Compare with the user's roles and teams",
+    "Ask the owner or an admin to add the role/team to the editors"
+  ],
+  "info_needed": [
+    "the dashboard's access setting",
+    "user's roles",
+    "whether other dashboards are editable"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can the user edit other dashboards?",
+      "customer_answer": "Yes, all the others work."
+    },
+    {
+      "tse_question": "What does the dashboard's permissions panel show?",
+      "customer_answer": "'Restricted: only Platform Team can edit.' I didn't know that existed."
+    }
+  ],
+  "customer_style": {
+    "tone": "team lead, mildly frustrated",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": ""
+}

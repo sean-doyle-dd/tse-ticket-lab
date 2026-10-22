@@ -1,0 +1,15 @@
+init_config:
+
+instances:
+  - openmetrics_endpoint: {{ p.OM_ENDPOINT }}
+    namespace: shop
+    auth_type: basic
+    username: ddagent-user
+    password: {{ p.OM_PASSWORD }}
+    metrics:
+      - ".*"
+{%- if p.OM_UNTYPED_OVERRIDE == "true" %}
+      - cart_total_value:
+          name: cart_total_value
+          type: gauge
+{%- endif %}

@@ -1,0 +1,70 @@
+{
+  "id": "synthetics-d-5968aae4",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-09-25",
+  "topic": "Whether Datadog Synthetics managed-location IP ranges are exclusive to Synthetics, and how a third party can identify traffic from specific tests",
+  "product_area": "Synthetic Monitoring (Datadog managed locations, IP ranges, test traffic identification)",
+  "environment": [
+    "Datadog Synthetics managed (Datadog hosted) locations",
+    "Browser tests (also API and multistep API tests discussed)",
+    "Third-party vendor system that wants to allowlist Datadog Synthetics source IPs"
+  ],
+  "symptom_pattern": "A customer wants to monitor a vendor's systems with Synthetics. The vendor is reluctant to allowlist Datadog's hosted IP ranges. The customer asks whether the ranges are used only by Synthetics, how the vendor can report or trace unexpected traffic back to a test, and how to tell the customer's own tests apart from other traffic on those ranges.",
+  "root_cause": "This was an informational question, not a fault. The thread says the published Synthetics ranges are the source IPs of the workers that run Datadog's managed Synthetic locations. Those locations are shared infrastructure, so allowing the ranges permits Synthetic test traffic from managed locations in general, not only the customer's tests. Each Synthetic request carries identifying headers, which lets the vendor trace traffic to a specific test.",
+  "resolution_path": [
+    "Explained that the ranges in the synthetics section of the published IP ranges JSON are the source IPs of workers running Datadog managed Synthetic locations, and that Datadog publishes ranges by function (Agent, API and webhook ranges are listed separately).",
+    "Pointed to the docs page on static IP addresses for the schema of the published ranges.",
+    "Warned that managed locations are shared Datadog infrastructure, so allowing the ranges permits Synthetic traffic from Datadog managed locations in general, not only the customer's tests.",
+    "Suggested that the vendor allow only the locations the tests run from, using the per-location breakdown in the synthetics endpoint, and monitor the endpoint for changes because IPs are added when new managed locations come online. An API test with a JSONPath assertion on the endpoint can alert on this.",
+    "Explained that every Synthetic request carries identifying headers: sec-datadog includes the public ID of the originating test, the user-agent identifies Synthetics, and APM headers such as x-datadog-origin: synthetics are added. Linked the identify-synthetics-bots guide.",
+    "Told the customer that if the vendor sees unexpected traffic, they can send the sec-datadog value, the timestamp and the target URL so Datadog can identify the specific test execution.",
+    "Said the customer can share the public IDs of the tests that target the vendor so the vendor can match them against the sec-datadog header, and mentioned adding a custom marker in the Advanced options of API or browser tests (the thread is cut off at this point)."
+  ],
+  "info_needed": [
+    "The sec-datadog header value, timestamp and target URL of any traffic the vendor considers unexpected"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, professional, concise",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "prefixes_ipv4_by_location",
+    "$.synthetics['prefixes_ipv4_by_location']['aws:eu-west-1'].length",
+    "sec-datadog",
+    "Datadog/Synthetics",
+    "DatadogSynthetics",
+    "x-datadog-origin: synthetics"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/configuration/network/#static-ip-addresses",
+    "https://docs.datadoghq.com/synthetics/guide/identify_synthetics_bots/"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer answered each of the customer's three questions in turn with documented facts. They added practical advice on narrowing the allowlist to specific locations and on tracing traffic back to a specific test.",
+    "steps": [
+      "Introduced themself and confirmed they would handle the request.",
+      "Answered question 1: what the published Synthetics ranges are and how Datadog separates ranges by function.",
+      "Warned that managed locations are shared infrastructure, and suggested allowing only the locations in use and monitoring the endpoint for changes.",
+      "Answered question 2: listed the identifying headers on Synthetic requests and told the customer what to send if unexpected traffic is seen.",
+      "Answered question 3: explained how the test public ID in the sec-datadog header identifies the customer's own tests."
+    ],
+    "key_questions": [],
+    "communication": [
+      "Used a labelled section for each of the customer's questions. Gave specific header names and values. Linked the relevant docs pages. Gave an example JSONPath assertion for alerting on IP range changes. Said what information to send back if the vendor sees unexpected traffic."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-09"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "id": "web-platform-d-7ab94cd3",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-15",
+  "topic": "SSO login blocked by email verification code that never arrives",
+  "product_area": "Account management / SAML SSO login",
+  "environment": [
+    "Datadog EU site",
+    "SAML SSO",
+    "SP-initiated login",
+    "no custom subdomain mentioned"
+  ],
+  "symptom_pattern": "After SSO login, a user who had logged in successfully before is prompted for an 8-digit email verification code. The code never arrives, even after resending and checking spam.",
+  "root_cause": "The thread does not state a confirmed root cause. The support engineer suspected the user's email address might be on the email Bounce List, which blocks emails from being sent, and checked this in the backend. The thread does not say what the check found.",
+  "resolution_path": [
+    "The support engineer checked the backend to see whether the user's email was on the Bounce List.",
+    "While checking, the support engineer asked the customer to have the user log in through the organization's SAML login URL.",
+    "The customer went to try this, and the ticket was marked solved in chat. The thread does not say which step resolved it."
+  ],
+  "info_needed": [
+    "Email address of the affected user",
+    "Which Datadog organization the user is trying to log into"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you share the affected user's email?",
+      "customer_answer": "The customer provided the user's email address."
+    },
+    {
+      "tse_question": "Is the user trying to log into the specific organization named in the ticket?",
+      "customer_answer": "Yes, and they said the user logs in through the EU Datadog site."
+    },
+    {
+      "tse_question": "Could you ask the user to try logging in using the SAML URL?",
+      "customer_answer": "The customer agreed and went to ask the user to try it."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, and clear about the problem",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "8-digit verification code",
+    "The custom sub-domain feature is not enabled by default and must be enabled by Datadog Support",
+    "I'm checking our backend to see if he's email has been added to our Bounce List",
+    "Which blocks emails from being send"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer quickly collected the user's email and target organization, then checked whether the email was on the Bounce List. In parallel, they gave the customer a SAML login URL for the user to try.",
+    "steps": [
+      "Greeted the customer in chat and asked for the affected user's email.",
+      "Confirmed which organization the user was trying to log into.",
+      "Checked the backend to see whether the user's email was on the Bounce List.",
+      "Asked the customer to have the user try the SAML login URL while the check ran.",
+      "Marked the ticket solved in chat."
+    ],
+    "key_questions": [
+      "Could you please share the user email with me?",
+      "Is he trying to log into the specific organization?",
+      "Could you please ask the user to try to login using the SAML URL?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

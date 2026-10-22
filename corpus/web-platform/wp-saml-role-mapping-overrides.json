@@ -1,0 +1,43 @@
+{
+  "id": "wp-saml-role-mapping-overrides",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-06-25",
+  "topic": "SAML users keep losing admin role",
+  "product_area": "Web Platform / SAML & role mapping",
+  "environment": [
+    "SAML SSO with an IdP",
+    "AuthN (role) mappings enabled"
+  ],
+  "symptom_pattern": "Admins who were manually granted the Admin role lose it every time they log in via SAML and end up as Standard users.",
+  "root_cause": "AuthN mappings are enabled, so roles are recomputed from IdP attributes at every login; the users' group attribute doesn't map to Admin, overriding manual assignments.",
+  "resolution_path": [
+    "Check whether role mappings are enabled and what attributes the users send",
+    "Map the IdP group to the Admin role (or adjust the IdP)",
+    "Have the user log in again and confirm the role"
+  ],
+  "info_needed": [
+    "mapping configuration",
+    "SAML assertion attributes",
+    "when it started"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Are Role Mappings enabled in Organization Settings?",
+      "customer_answer": "Yes, our IdP team turned them on last month."
+    },
+    {
+      "tse_question": "Which groups does the affected user's assertion contain?",
+      "customer_answer": "Only 'eng-all'; the admin group isn't sent."
+    }
+  ],
+  "customer_style": {
+    "tone": "org admin, escalating internally, wants it fixed today",
+    "technical_level": "high",
+    "urgency": "urgent"
+  },
+  "difficulty_range": [
+    "high"
+  ],
+  "sandbox_hint": ""
+}

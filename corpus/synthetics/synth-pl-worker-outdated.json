@@ -1,0 +1,42 @@
+{
+  "id": "synth-pl-worker-outdated",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-07-17",
+  "topic": "Warning that private location worker is outdated",
+  "product_area": "Synthetics / Private locations",
+  "environment": [
+    "Private location with one or more workers in Docker"
+  ],
+  "symptom_pattern": "The private location page warns that at least one worker isn't on the latest image; customer worries they need a new private location and new keys.",
+  "root_cause": "One worker is running an older image version. Upgrading only requires running the new image with the same config file; keys don't change.",
+  "resolution_path": [
+    "Find the outdated worker in the private location side panel",
+    "Start a new worker on the latest stable tag with the same config",
+    "Remove the old worker once the new one reports"
+  ],
+  "info_needed": [
+    "worker versions in the side panel",
+    "how workers are deployed",
+    "whether multiple PLs share a name"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "How many workers report to this private location?",
+      "customer_answer": "Two, on different VMs."
+    },
+    {
+      "tse_question": "Do you still have the original config JSON?",
+      "customer_answer": "Yes, it's on both VMs."
+    }
+  ],
+  "customer_style": {
+    "tone": "cautious, risk-averse",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low"
+  ],
+  "sandbox_hint": ""
+}

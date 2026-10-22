@@ -1,0 +1,43 @@
+{
+  "id": "wp-monitor-is-match-value",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-07-03",
+  "topic": "Conditional monitor message blocks never render",
+  "product_area": "Web Platform / Monitors notifications",
+  "environment": [
+    "Metric monitor with templated message",
+    "Conditional variables"
+  ],
+  "symptom_pattern": "A monitor uses {{#is_match}} blocks to change the message depending on the breaching value, but none of the conditional text ever appears in notifications.",
+  "root_cause": "is_match/is_exact_match compare against tag variables from the group-by (tag.name) or the reserved 'value' keyword; matching on 'a.value' never evaluates. A tag used for matching must be in the group-by.",
+  "resolution_path": [
+    "Review the message template",
+    "Use {{#is_exact_match \"value\" \"...\"}} for values, or add the tag to the group-by and match on tag.name",
+    "Test with Test Notifications"
+  ],
+  "info_needed": [
+    "monitor JSON or message",
+    "query group-by",
+    "what they're trying to differentiate"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you paste the message template?",
+      "customer_answer": "{{#is_match \"a.value\" \"3\"}} Severity high {{/is_match}}"
+    },
+    {
+      "tse_question": "Is the tag you want to match on part of the group-by?",
+      "customer_answer": "No, the query is just avg by host."
+    }
+  ],
+  "customer_style": {
+    "tone": "detail-oriented admin",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": ""
+}

@@ -1,0 +1,68 @@
+{
+  "id": "web-platform-d-58116af2",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-20",
+  "topic": "Changing a user's login email after a company rename",
+  "product_area": "Account management / user login (Google sign-in)",
+  "environment": [
+    "Datadog web platform",
+    "Google sign-in for login"
+  ],
+  "symptom_pattern": "Customer's company was renamed and their old email domain no longer exists in Google, so Sign in with Google fails because the Datadog login email still points to the old address. Their contact email was already updated but the login email was not.",
+  "root_cause": "The user's login email was still the old address, which no longer exists in Google. Users cannot change their login email themselves, so Support had to change it on their behalf.",
+  "resolution_path": [
+    "Support noted the contact email had already been updated but the login email had not",
+    "Support explained that users cannot change their login email directly but Support can do it",
+    "Support asked the customer to confirm the current and new login emails and that they wanted the change",
+    "Customer confirmed",
+    "Support changed the login email and confirmed the change processed properly",
+    "Customer was told they can now log in with the new email"
+  ],
+  "info_needed": [
+    "Confirmation of the current login email",
+    "Confirmation of the new login email",
+    "Confirmation that the customer wants the change made"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you confirm the current and new login email details are correct and that you want us to make this change?",
+      "customer_answer": "Customer confirmed the details were correct and agreed to the change."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and brief",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer identified the mismatch between the contact email and login email, explained that users can't change the login email themselves, and got explicit confirmation before making the change on the customer's behalf. They then made the change and confirmed it.",
+    "steps": [
+      "Greeted the customer and introduced themselves",
+      "Checked the account and noticed the contact email was updated but the login email was not",
+      "Explained that users cannot change the login email directly but Support can",
+      "Asked the customer to confirm the current and new login emails and the request to change",
+      "Changed the login email after receiving confirmation",
+      "Confirmed the change and told the customer they could log in with the new email"
+    ],
+    "key_questions": [
+      "Please confirm the current login email and new login email are correct and that you'd like us to make this change"
+    ],
+    "communication": [
+      "Stated the current situation and the limitation up front, listed the current and new emails for the customer to verify, and asked for explicit confirmation before acting. The final message confirmed the result and explained how the ticket would be closed."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

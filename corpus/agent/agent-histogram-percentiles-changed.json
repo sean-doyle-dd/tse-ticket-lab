@@ -1,0 +1,44 @@
+{
+  "id": "agent-histogram-percentiles-changed",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-07-14",
+  "topic": "p95 latency widgets empty after Agent config rollout",
+  "product_area": "Agent / DogStatsD histograms",
+  "environment": [
+    "Agent 7 fleet managed by configuration management",
+    "Dashboards using <metric>.95percentile"
+  ],
+  "symptom_pattern": "Dashboards graphing a histogram's 95th percentile went empty across many hosts after a routine config-management rollout; .avg/.max/.count still work. Customer believes metrics are being dropped by Datadog.",
+  "root_cause": "The rollout changed histogram_percentiles (e.g. to 0.99 only), so the Agent stopped generating the .95percentile series. Nothing is dropped; a different set of percentile series is produced.",
+  "resolution_path": [
+    "Check which <metric>.*percentile series exist in the metrics summary",
+    "Inspect histogram_percentiles in the Agent's runtime config",
+    "Restore 0.95 (or switch the app to distributions for globally accurate percentiles)"
+  ],
+  "info_needed": [
+    "exact metric names on the widgets",
+    "recent config changes",
+    "agent config output"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which exact metric is on the empty widget?",
+      "customer_answer": "checkout.latency.95percentile. The avg one still works fine."
+    },
+    {
+      "tse_question": "Did anything change in your Agent configuration around that time?",
+      "customer_answer": "Our platform team rolled out a new datadog.yaml baseline, but it's only supposed to be log settings."
+    }
+  ],
+  "customer_style": {
+    "tone": "frustrated, business-impact focused, insists nothing relevant changed",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "agent/dogstatsd-app"
+}

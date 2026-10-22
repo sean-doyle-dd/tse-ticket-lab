@@ -1,0 +1,79 @@
+{
+  "id": "apm-d-b66776e3",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-04",
+  "topic": "Node.js tracer heap leak and OOM crashes in a Next.js app, resolved by disabling the Undici integration",
+  "product_area": "APM - Node.js tracer (dd-trace-js)",
+  "environment": [
+    "Node.js 24",
+    "Next.js 16 App Router, standalone output, cacheComponents enabled",
+    "AWS EKS",
+    "dd-trace-js 5.113.0, upgraded from 5.87.0"
+  ],
+  "symptom_pattern": "With tracing enabled, V8 heap grows without bound (about 35-50 MiB/h). The pods eventually crash with 'Ineffective mark-compacts near heap limit' at about 30h of uptime, and users see 502 bursts. The growth began after a tracer upgrade. Disabling the tracer entirely stopped the crashes immediately.",
+  "root_cause": "Engineering traced the leak to the tracer's Undici integration. The customer's observation matched a known upstream issue where finished spans are retained because long-lived async resources capture the AsyncLocalStorage frame. Engineering merged a tracer-side fix and opened a fix against the Undici project as well. The thread does not give more detail on the mechanism.",
+  "resolution_path": [
+    "The customer had set DD_TRACE_ENABLED=false as a stopgap, which stopped the OOM crashes but left the service without APM.",
+    "The TSE asked whether the issue started with the tracer upgrade, and the customer confirmed the regression window and that the crashes stopped when tracing was disabled.",
+    "The TSE escalated to Engineering with the regression window and the customer's offer to supply heap snapshots.",
+    "Engineering identified the Undici integration as the likely cause.",
+    "The TSE gave two workarounds: set DD_TRACE_UNDICI_ENABLED=false, or call tracer.use('undici', false).",
+    "The customer re-enabled tracing with the Undici integration disabled. They validated it in staging for 24 hours, then in production, where memory plateaued.",
+    "Engineering merged the tracer-side fix, due in the next tracer release.",
+    "Engineering confirmed the customer can re-enable the Undici integration after upgrading to that release."
+  ],
+  "info_needed": [
+    "Whether the issue began with the tracer upgrade, and the tracer version before and after",
+    "Whether any other application changes happened around the time the issue started"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Have you been experiencing this issue since upgrading the tracer from 5.87.0 to 5.113.0? If not, did anything change in the application around the time it started?",
+      "customer_answer": "Yes. Memory was stable on the older tracer version, climbed after the upgrade and led to OOM crashes. Setting DD_TRACE_ENABLED=false with no other changes stopped the crashes immediately, which isolated the tracer from the other dependency bumps."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, appreciative, and well prepared, having researched the upstream issue before opening the ticket",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "FATAL ERROR: Ineffective mark-compacts near heap limit",
+    "DD_TRACE_ENABLED=false",
+    "DD_TRACE_FETCH_ENABLED=false",
+    "DD_TRACE_UNDICI_ENABLED=false",
+    "DD_TRACE_NEXT_ENABLED=false",
+    "tracer.use('undici', false)",
+    "middleware:false",
+    "runtime.node.mem.heap_used"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE took the customer's detailed report and escalated it to Engineering. They asked a targeted question about when the issue started, which narrowed the regression window. They then relayed Engineering's workaround and kept the customer updated until the fix was merged.",
+    "steps": [
+      "Passed on Engineering's question about the tracer version change and when the issue began.",
+      "Confirmed the regression window with the customer and forwarded it to Engineering.",
+      "Relayed Engineering's root-cause finding and gave two ways to disable the Undici integration.",
+      "Updated the customer when the tracer-side fix was merged and a fix was opened in the Undici project.",
+      "Asked Engineering whether the integration could be re-enabled right after the tracer fix or only after the Undici fix.",
+      "Relayed Engineering's answer that the integration can be re-enabled after upgrading to the next tracer release."
+    ],
+    "key_questions": [
+      "Have you been experiencing this issue since upgrading the tracer, and did anything else change in the application around that time?",
+      "Can the Undici integration be re-enabled right after the tracer fix, or only after the Undici-side fix is released? (asked of Engineering on the customer's behalf)"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

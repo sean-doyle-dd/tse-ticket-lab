@@ -1,0 +1,72 @@
+{
+  "id": "agent-d-4e01b6d9",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-10-08",
+  "topic": "503 'load shedding by flash' errors in Agent forwarder logs with transactions rescheduled",
+  "product_area": "Agent / Forwarder (metrics intake) and log-based monitoring",
+  "environment": [
+    "Datadog Agent on Linux",
+    "ECS Fargate",
+    "US5 site"
+  ],
+  "symptom_pattern": "A log-based monitor alerted on a burst of 23 Agent errors over about 5 minutes. Each said the Agent got a 503 Service Unavailable from the intake while sending a transaction, with the reason 'load shedding by flash' and the Agent 'rescheduling it'. The errors hit the check_run, metrics series and sketches endpoints and then stopped on their own. The customer wanted to know whether data was lost and whether the monitor should keep alerting on this.",
+  "root_cause": "The intake layer was briefly overloaded and deliberately rejected some requests with a 503 to protect itself and the rest of the pipeline. This is expected protective behavior, not a customer-side authentication, network, proxy or configuration problem. No status page incident was declared for that window.",
+  "resolution_path": [
+    "Confirmed from the customer's log extract that all errors fell within about 5 minutes, hit three Agent endpoints, and all carried the same 'load shedding by flash' reason.",
+    "Explained that the 503 is a retryable response and that the Agent forwarder retries any 5xx, which is the 'rescheduling it' in the log line.",
+    "Explained that payloads sit in the Agent's retry queue and are re-sent with backoff, keeping their original timestamps. Data is only dropped if failures last long enough to fill the retry queue.",
+    "Told the customer to check the Forwarder > Transactions section of the Agent status output, where Dropped should be 0 and Retried shows the retries.",
+    "Gave monitor tuning recommendations. The customer said they would exclude the 'rescheduling it' message instead of the whole Agent container, and would stop hard-coding strings in the monitor description.",
+    "The customer confirmed they were satisfied and asked to mark the ticket resolved."
+  ],
+  "info_needed": [
+    "Which host or container the errors came from (the Host column in the customer's extract was empty)",
+    "Whether the Agent's Forwarder transactions show any dropped payloads"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, appreciative and methodical",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "load shedding by flash",
+    "rescheduling it",
+    "503 Service Unavailable",
+    "/api/intake/metrics/v3/series",
+    "/api/v1/check_run",
+    "/api/beta/sketches",
+    "sudo datadog-agent status",
+    "Forwarder > Transactions"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer analyzed the customer's log extract to establish the error window, affected endpoints and common reason. They then answered each of the customer's questions in order and gave a way to verify no data was lost.",
+    "steps": [
+      "Analyzed the customer's screenshots and CSV extract for timing, endpoints and the error reason.",
+      "Checked the US5 status page for a declared incident in that window.",
+      "Answered each customer question in turn: saturation, the 503, retry behavior, data loss and frequency.",
+      "Gave a command and the status section to check for dropped and retried transactions.",
+      "Noted the empty Host column and offered further help if the customer could identify the host.",
+      "Gave monitor tuning recommendations."
+    ],
+    "key_questions": [
+      "Can you tell me which host the errors came from, since the Host column in the extract is empty?"
+    ],
+    "communication": [
+      "Opened with a data-backed summary of the error window and endpoints. Restated each customer question and answered it directly. Was candid about what could not be determined, such as an exact frequency. Gave a concrete verification step with the expected values (Dropped should be 0)."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "apm-otel-javaagent-conflict",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-07-22",
+  "topic": "Java traces stop after adding OpenTelemetry agent",
+  "product_area": "APM / Java tracer",
+  "environment": [
+    "JVM services",
+    "Datadog Java tracer plus OpenTelemetry Java agent on the same JVM"
+  ],
+  "symptom_pattern": "Traces for a Java service stop after the team adds the OpenTelemetry Java agent to forward application logs elsewhere; removing it restores traces but breaks their log shipping.",
+  "root_cause": "Two -javaagent instrumentation agents on one JVM is unsupported; they conflict on bytecode instrumentation and silently suppress traces. The log path doesn't need a javaagent.",
+  "resolution_path": [
+    "Confirm the JVM flags show two -javaagent entries",
+    "Explain the conflict and point to compatibility docs",
+    "Move log forwarding to an appender or node-level forwarder; keep one tracing agent"
+  ],
+  "info_needed": [
+    "JVM startup flags",
+    "what the OTel agent is used for",
+    "tracer startup logs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the JVM command line?",
+      "customer_answer": "-javaagent:/opt/dd-java-agent.jar -javaagent:/opt/opentelemetry-javaagent.jar ..."
+    },
+    {
+      "tse_question": "What do you use the OTel agent for besides tracing?",
+      "customer_answer": "Only to ship app logs to our cloud provider's logging service."
+    }
+  ],
+  "customer_style": {
+    "tone": "pragmatic architect, wants both tools to work",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

@@ -1,0 +1,44 @@
+{
+  "id": "wp-cloud-metric-monitor-evaluation-delay",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-08-18",
+  "topic": "Monitor on cloud metrics alerts falsely then recovers",
+  "product_area": "Web Platform / Monitors",
+  "environment": [
+    "Metric monitor on a cloud integration metric (crawler-based)",
+    "Short evaluation window"
+  ],
+  "symptom_pattern": "A monitor on a cloud provider metric fires 'below threshold' or No Data alerts a few times a day and recovers minutes later; the graph looks fine afterwards.",
+  "root_cause": "Crawler-based cloud metrics arrive with a delay; the monitor evaluates the most recent window before data lands, so it sees partial or empty data. An evaluation delay is needed.",
+  "resolution_path": [
+    "Compare alert times with metric arrival",
+    "Explain crawler latency for that integration",
+    "Add an evaluation delay (e.g. 900s) and/or adjust no-data handling and window"
+  ],
+  "info_needed": [
+    "monitor query and window",
+    "integration type",
+    "alert history"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What evaluation window and delay does the monitor use?",
+      "customer_answer": "Last 5 minutes, no delay."
+    },
+    {
+      "tse_question": "Which integration does the metric come from?",
+      "customer_answer": "The cloud provider integration, it's a load balancer metric."
+    }
+  ],
+  "customer_style": {
+    "tone": "on-call engineer, tired of false pages",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

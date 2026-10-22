@@ -1,0 +1,93 @@
+{
+  "id": "agent-d-114aaca9",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-09-18",
+  "topic": "Datadog Agent service on Windows repeatedly stops and the host disappears from Database Monitoring",
+  "product_area": "Agent (Windows service account / Log on as a service) affecting Database Monitoring SQL Server host visibility",
+  "environment": [
+    "Windows",
+    "Agent 7.45",
+    "SQL Server (Database Monitoring)",
+    "Active Directory domain with Group Policy"
+  ],
+  "symptom_pattern": "The Datadog Agent service on a Windows host is frequently found in a stopped state. As a result, the host is missing from the DBM SQL Server list. Restarting the service fails with an error until the same service account credentials are re-entered, after which it starts. The failure then recurs.",
+  "root_cause": "The Agent's service account was granted the 'Log on as a service' right by the local security policy at install time. A domain Group Policy periodically re-applied and overrode that local setting, which removed the right and caused intermittent service logon failures (Event 7041/7000). Re-entering the credentials temporarily re-granted the right until the GPO applied again.",
+  "resolution_path": [
+    "Review the event viewer error and agent.log, which pointed to service logon failures",
+    "Recognize that a domain GPO was overriding the local 'Log on as a service' right for the Agent's service account",
+    "Have the customer ask their AD admin whether a GPO governs 'Log on as a service' rights",
+    "Either add the Agent's service account to that GPO permanently or exclude the host from it",
+    "Customer confirmed the issue was resolved and asked to close the ticket"
+  ],
+  "info_needed": [
+    "Platform of the affected host",
+    "How the stopped service was identified",
+    "Agent version",
+    "Agent flare from the affected host",
+    "Agent logs (agent.log)",
+    "Windows event logs from around the time the service stopped"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What platform is the affected host running (Linux/Windows/macOS)?",
+      "customer_answer": "It is Windows."
+    },
+    {
+      "tse_question": "How are you identifying that the Agent service is in a stopped state?",
+      "customer_answer": "They sent a screenshot showing the service not running, and noted the host was missing from the DBM SQL Server list."
+    },
+    {
+      "tse_question": "What is your Agent version?",
+      "customer_answer": "Version 7.45."
+    },
+    {
+      "tse_question": "Can you send an Agent flare, or the agent.log and Windows event logs if the flare fails?",
+      "customer_answer": "The flare zip upload by email was rejected, so they attached agent.log and shared the event viewer error from when they tried to restart the service."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, brief, professional",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Log on as a service",
+    "Event 7041/7000",
+    "C:\\ProgramData\\Datadog\\logs\\agent.log",
+    "the version is 7.45"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/troubleshooting/send_a_flare/?tab=agent#send-a-flare-using-the-flare-command",
+    "https://docs.datadoghq.com/agent/guide/windows-agent-ddagent-user/"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer asked for a flare plus Windows event logs and the agent.log. When the flare upload failed, they offered the flare command and the manual logs as alternatives. From the logs they identified a Group Policy overriding the service account's logon right and pointed the customer to their AD admin.",
+    "steps": [
+      "Requested an Agent flare and Windows event logs from the affected host",
+      "Offered the flare command as a fallback when the customer could not upload the zip, and asked for agent.log and event logs if that also failed",
+      "Reviewed the agent.log and event viewer error the customer sent",
+      "Diagnosed a domain GPO overriding the local 'Log on as a service' right",
+      "Recommended the customer have their AD admin permanently add the service account to the GPO or exclude the host"
+    ],
+    "key_questions": [
+      "Can you provide an Agent flare from the affected host?",
+      "Can you send the Windows event logs from around the time the Agent stopped?",
+      "Can you check with your AD admin whether a GPO governs 'Log on as a service' rights?"
+    ],
+    "communication": [
+      "Gave a fallback path when the flare upload failed, with the exact log location. Explained why re-entering the credentials temporarily fixed the problem, then gave a specific action for the AD admin. Confirmed closure and explained how the ticket could be reopened."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-09"
+  }
+}

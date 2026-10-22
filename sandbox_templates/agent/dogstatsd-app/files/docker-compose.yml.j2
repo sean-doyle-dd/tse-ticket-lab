@@ -1,0 +1,23 @@
+name: {{ meta.short_id }}
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    env_file: [config/agent.env]
+    environment:
+      DD_API_KEY: ${DD_API_KEY:?set DD_API_KEY in .env (sandbox org key)}
+{%- if p.SITE == "wrong_site" %}
+      DD_SITE: us5.datadoghq.com
+{%- else %}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+{%- endif %}
+      DD_HOSTNAME: {{ meta.short_id }}-host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+
+  checkout:
+    build: ./app
+    env_file: [config/app.env]
+    depends_on: [datadog-agent]
+    restart: unless-stopped

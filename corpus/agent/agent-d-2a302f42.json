@@ -1,0 +1,97 @@
+{
+  "id": "agent-d-2a302f42",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-09-01",
+  "topic": "Windows Agent 7.82 local IPC on port 5001 timing out on some Domain Controllers, plus Kubelet warnings on non-containerized hosts",
+  "product_area": "Agent / Windows / local IPC (CMD API) / Remote Configuration / system-probe",
+  "environment": [
+    "Windows Server 2016 Domain Controllers",
+    "Agent upgraded in place from 7.76.3 to 7.82.2 (also tried 7.82.3)",
+    "Non-containerized Windows VMs with no Kubernetes or container runtime",
+    "Agent installed on a non-default drive",
+    "Windows Defender Firewall enabled"
+  ],
+  "symptom_pattern": "After upgrading from 7.76.3 to 7.82.x, system-probe starts very slowly on two hosts. The core agent logs repeated remote-config 'retrying the first update' errors with a growing consecutive-failure count, caused by connection attempts to the local CMD API port timing out. agent status, flare and the Tray app also fail on those hosts, although metrics are still reported normally. Separately, the Agent logs a Kubelet HTTPS-to-HTTP fallback warning every 30 minutes on Windows hosts that don't run containers. An identically configured Domain Controller in the same domain was unaffected.",
+  "root_cause": "Per the customer, a misconfiguration in Windows Defender Firewall on the affected hosts was blocking local communication with the Datadog Agent. The Agent itself was healthy and listening. Local connections to the CMD API port hung until they timed out, with no SYN-ACK and no RST, which pointed to a host-level driver or firewall filter dropping the packets. Changing cmd_port or the Agent version did not help.",
+  "resolution_path": [
+    "Customer first changed cmd_port, upgraded 7.82.2 to 7.82.3 and rebooted, with no improvement",
+    "The TSE reviewed the debug flare and found the Core Agent API starts listening, but connections to it fail seconds later, including from Agent subprocesses",
+    "The TSE asked for netstat, curl, firewall profile and antivirus status output, plus datadog.yaml and system-probe.yaml",
+    "The output showed the Agent bound and listening but every local connection hung for about 21 seconds and timed out, which indicates silently dropped loopback packets on the host",
+    "The TSE asked the customer to involve the owners of Windows Firewall and endpoint security and compare the broken hosts with a working Domain Controller",
+    "Engineering confirmed no Agent-side cause and no supported way to move the CMD API off TCP loopback on Windows. Changing cmd_port was the only knob",
+    "A diagnostic script was sent to run on a broken host and a known-good host in the same domain for comparison",
+    "The customer found and corrected the Windows Defender Firewall misconfiguration, and the issue was resolved"
+  ],
+  "info_needed": [
+    "Debug flare from an affected host",
+    "Whether anything differs between the affected and unaffected hosts (site, OU, EDR policy, GPO)",
+    "Listening-socket and connection-test output for the local CMD API port",
+    "Windows Firewall profile status and antivirus or endpoint product status",
+    "datadog.yaml and system-probe.yaml",
+    "Output of a packet-drop capture script from one broken and one working host on the same day"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you run netstat, curl against the local port, and collect firewall and antivirus status from the affected host?",
+      "customer_answer": "Customer supplied the outputs. The antivirus product query failed because the SecurityCenter2 namespace does not exist on Windows Server, so they sent Get-MpComputerStatus output instead."
+    },
+    {
+      "tse_question": "What is different about the affected hosts compared with the other Domain Controllers that are fine (site, OU, EDR policy, GPO link)?",
+      "customer_answer": "Their team said there are no intentional differences, since the hosts are built from the same baseline with identical OU structure, GPOs and security policies. In one domain, one Domain Controller was affected and the other was not."
+    },
+    {
+      "tse_question": "Please run the provided diagnostic script on a broken host and a working host in the same domain and send both outputs.",
+      "customer_answer": "Customer sent the outputs from both servers, then tested other Agent versions and found the last version without the error was 7.78.4. They later corrected that conclusion, saying the status and Tray problems persisted."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, thorough and professional",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Impossible to reach Kubelet through HTTPS, fallback to HTTP, err=Kubelet connection check failed",
+    "retrying the first update of remote-config state",
+    "Get-CimInstance : Invalid namespace",
+    "Cannot restart Datadog agent",
+    "netstat -ano | Select-String \":5001\"",
+    "Get-NetFirewallProfile | Select Name, Enabled",
+    "Get-MpComputerStatus",
+    "agent_ipc.use_socket",
+    "cmd_port",
+    "Started HTTP server"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The TSE used the debug flare and local diagnostics to show the Agent was healthy and listening, while local connections to the CMD API port were being silently dropped. They then steered the customer toward the host firewall and endpoint-security layer and brought in engineering, who confirmed there was no Agent-side cause. The customer found the firewall misconfiguration themselves.",
+    "steps": [
+      "Reviewed the debug flare and identified that the local API starts but connections to it fail",
+      "Explained which functions depend on the local IPC port and which data paths are unaffected, to scope the impact",
+      "Requested netstat, curl, firewall profile and antivirus status output, plus the config files",
+      "Interpreted the output as silently dropped loopback packets and pointed to a firewall rule or endpoint filter",
+      "Said support was best effort for host networking and asked the customer to involve the firewall and endpoint security owners",
+      "Escalated to Windows Agent engineering, then relayed their findings and the lack of a supported workaround",
+      "Provided a read-only diagnostic script to run on a broken host and a working host for comparison",
+      "Kept the ticket open and pending while the customer tested further"
+    ],
+    "key_questions": [
+      "What is different about the affected hosts compared with the working Domain Controllers?",
+      "Can you run the netstat, curl and firewall status commands and attach the output?",
+      "Can you run the diagnostic script on both a broken and a working host on the same day?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

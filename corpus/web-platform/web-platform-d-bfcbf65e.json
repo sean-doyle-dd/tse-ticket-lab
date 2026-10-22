@@ -1,0 +1,96 @@
+{
+  "id": "web-platform-d-bfcbf65e",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-08-25",
+  "topic": "Okta SCIM Group Push fails to sync team membership, then fails with 'resource already exists' on re-push",
+  "product_area": "Teams / SCIM provisioning (Okta Group Push)",
+  "environment": [
+    "Okta SCIM-provisioned Datadog Teams",
+    "Teams migrated from manually managed to SCIM-managed",
+    "Okta Datadog app using Push Groups"
+  ],
+  "symptom_pattern": "Okta Group Push creates the Datadog team, but the membership sync step fails with a generic 'Bad Request ... invalid request' error. After the customer unlinks and re-pushes, the push fails with 'Conflict ... resource already exists', even though no team with that name shows in the team list or team connections API. Other, larger groups pushed fine in the same session.",
+  "root_cause": "Two causes. (1) Some groups contained a broken user reference: a user still assigned in Okta but no longer present in Datadog, which caused the membership sync to be rejected. (2) Stale backend references to the previously pushed teams (not visible through the customer's API access) remained after deletion and caused the 'resource already exists' conflict. Engineering had to delete these on the Datadog side.",
+  "resolution_path": [
+    "The TSE asked engineering to clear the stale team connection for the affected teams, and asked the customer to delete the existing team, unlink the pushed group in Okta and re-add it with + Push Groups.",
+    "The re-push still failed with 'resource already exists', so the TSE had engineering clear the backend reference again and asked for a screen recording of the reproduction.",
+    "The TSE identified a single broken user reference (a user External ID still assigned in Okta but missing in Datadog) in the affected groups.",
+    "The customer unassigned and reassigned that user in the group's Assignments tab in Okta. If the assignment was group-owned, they converted the assignment master to Administrator first. Okta then re-linked the user by email match.",
+    "The customer found and fixed further stale user references, which then showed syncState: SYNCHRONIZED.",
+    "Engineering deleted the remaining stale backend team references, including a leftover managed team that the customer could not delete via API.",
+    "The TSE flagged one more broken user reference, which the customer fixed the same way.",
+    "The customer confirmed all four affected teams synced successfully."
+  ],
+  "info_needed": [
+    "Whether the old pushed group was unlinked in Okta with 'Delete the group in the target app'",
+    "Exact time the push was triggered and whether it succeeded or failed",
+    "A screen recording of the issue being reproduced"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Did you unlink the old pushed group in Okta with 'Delete the group in the target app'?",
+      "customer_answer": "Yes, they used that option both in the earlier attempt and in the reproduction."
+    },
+    {
+      "tse_question": "Can you take a screen recording while reproducing the issue?",
+      "customer_answer": "They recorded the reproduction and shared it via a file-sharing link."
+    },
+    {
+      "tse_question": "Let us know the exact time you triggered the push and whether it succeeded or failed.",
+      "customer_answer": "They reported the creation and failure timestamps for each attempt, along with the exact error text."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, detailed and collaborative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Error while updating user group membership for group <name>: Bad Request. Errors reported by remote server: invalid request",
+    "application.provision.group_membership.update",
+    "Conflict. Errors reported by remote server: resource already exists",
+    "Cannot delete a managed team",
+    "is_managed: false",
+    "syncState: SYNCHRONIZED",
+    "Delete the group in the target app",
+    "Unlink pushed group",
+    "Applications \u2192 Datadog \u2192 Push Groups",
+    "GET /api/v2/team/connections"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE worked a multi-round SCIM issue by coordinating with engineering on backend cleanup. They gave the customer clear re-provisioning steps and kept asking for the reproduction details engineering needed. They eventually isolated a stale user assignment as the remaining cause and repeated the same fix for each affected team.",
+    "steps": [
+      "Opened an internal escalation with engineering to look into the failing teams.",
+      "Had engineering clear the team connections for the affected teams.",
+      "Gave the customer ordered steps to delete the team, unlink the pushed group and re-push it.",
+      "Forwarded the customer's failure details to engineering and kept them updated.",
+      "Re-confirmed the unlink option used and requested a screen recording of the reproduction.",
+      "Obtained access to the shared recording.",
+      "Identified the broken user reference and gave steps to unassign and reassign that user in Okta.",
+      "Had engineering delete stale backend references for the remaining teams.",
+      "Identified one more broken user reference and pointed the customer to the same steps.",
+      "Confirmed the resolution with the customer and sent the satisfaction survey."
+    ],
+    "key_questions": [
+      "Did you unlink the old pushed group with 'Delete the group in the target app'?",
+      "Can you record a screen recording while reproducing the issue?",
+      "What exact time did you trigger the push, and did it succeed or fail?"
+    ],
+    "communication": [
+      "Gave numbered steps and asked for the exact trigger time and outcome of each attempt. Warned the customer to double-check the user before unassigning, because the wrong user would be disabled and lose their App Keys. Told the customer what to do if the error recurs on another group. Gave regular status updates while waiting on engineering."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

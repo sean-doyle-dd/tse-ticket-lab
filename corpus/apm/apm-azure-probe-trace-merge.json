@@ -1,0 +1,43 @@
+{
+  "id": "apm-azure-probe-trace-merge",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-06-12",
+  "topic": "Unrelated span merged into .NET traces on Azure",
+  "product_area": "APM / .NET tracer, propagation",
+  "environment": [
+    "ASP.NET Core on Azure App Service",
+    ".NET tracer, W3C propagation"
+  ],
+  "symptom_pattern": "Some traces contain an OPTIONS request from a platform client attached under an unrelated request, making it look like two requests were merged.",
+  "root_cause": "The Azure platform's scaling health probe sends requests carrying a valid traceparent copied from a real in-flight request, and the tracer correctly continues that context.",
+  "resolution_path": [
+    "Pull raw span data and compare parent/span ids and runtime-id",
+    "Identify the probe by user agent/resource",
+    "Restrict extraction to datadog style (DD_TRACE_PROPAGATION_STYLE_EXTRACT=datadog) for that app"
+  ],
+  "info_needed": [
+    "trace IDs/raw spans",
+    "user agent of the odd span",
+    "propagation settings"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What user agent does the odd span have?",
+      "customer_answer": "Something like HttpScaleManager, from an Azure IP."
+    },
+    {
+      "tse_question": "Do both spans share the same runtime-id?",
+      "customer_answer": "No, they're different."
+    }
+  ],
+  "customer_style": {
+    "tone": "detail-oriented, suspects a tracer bug, wants it escalated",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "high"
+  ],
+  "sandbox_hint": ""
+}

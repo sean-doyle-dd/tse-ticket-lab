@@ -1,0 +1,31 @@
+name: {{ meta.short_id }}
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    environment:
+      DD_API_KEY: ${DD_API_KEY:?set DD_API_KEY in .env (sandbox org key)}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+      DD_HOSTNAME: {{ meta.short_id }}-web-host
+      DD_LOGS_ENABLED: "true"
+      DD_TAGS: "env:sandbox sandbox:{{ meta.short_id }}"
+      DD_CONTAINER_EXCLUDE_LOGS: "name:.*datadog-agent.* name:.*traffic.*"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  web:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1::80"  # random free host port: docker compose port web 80
+    labels:
+      com.datadoghq.ad.checks: '{"{{ p.AD_CHECK_NAME }}": {"instances": [{"nginx_status_url": "{{ p.STATUS_URL }}"}]}}'
+      com.datadoghq.ad.logs: '[{"source": "{{ p.LOG_SOURCE }}", "service": "storefront-web"}]'
+
+  traffic:
+    image: curlimages/curl:8.10.1
+    depends_on: [web]
+    entrypoint: ["sh", "-c", "while true; do curl -s -o /dev/null http://web/; curl -s -o /dev/null http://web/missing; sleep 2; done"]

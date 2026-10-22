@@ -1,0 +1,72 @@
+{
+  "id": "apm-d-af8e2dff",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-28",
+  "topic": "APM Resources page omits query resources (grouped into OTHER) while spans remain searchable in Traces",
+  "product_area": "APM - Resources page / trace metrics (data volume guidelines)",
+  "environment": [
+    "PostgreSQL database spans instrumented via APM",
+    "Production environment",
+    "Single database-type APM service with very many unique query resources"
+  ],
+  "symptom_pattern": "A specific database query resource returns no results in the APM Resources section, but the same resource is fully searchable in APM Traces with correct parent spans and services. The customer cannot get aggregated execution counts or combined parent attribution for it.",
+  "root_cause": "The service hit the limit of 1,000 unique resource names per env + service. Resources arriving after the cap is reached are not listed individually and are grouped under OTHER (the Resources page tooltip for OTHER indicates this). This is expected behavior. Admission is first-come, first-served per 10-minute window, not ranked by volume, and an admitted resource keeps its slot while it keeps appearing.",
+  "resolution_path": [
+    "Support identified the missing resource was bucketed under OTHER because of the unique-resource-name limit, and confirmed this is expected behavior, not a bug.",
+    "Support explained the limit is 1,000 unique resource names per env + service, and that selection is first-come first-served per 10-minute window rather than volume-ranked, so absence from the Resources page does not indicate low volume.",
+    "Support recommended Database Monitoring to rank queries by execution count and total execution time, and to review partition-key use through explain plans.",
+    "Support recommended correlating Database Monitoring and Traces by enabling SQL comment propagation (service mode is enough), which populates a Calling Services list on the database instance page for parent attribution.",
+    "The customer proposed splitting traffic across separate APM service names. Support confirmed this works because the limit applies per env + service combination, so each service must stay under 1,000 resources."
+  ],
+  "info_needed": [
+    "Exactly what information from the Resources page the customer needs for the missing query resources",
+    "The customer's specific use case (identifying high-volume queries, spotting queries missing partition keys)"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What exactly do you need to see from the resource page for these queries, so I can look for a workaround?",
+      "customer_answer": "They want to identify and optimize high-volume query resources and need aggregated execution counts, latency metrics and parent service/operation attribution. They also asked for the exact limit, how omitted resources are chosen, and recommended workarounds. A second contact added that they use the Resources page to audit PostgreSQL queries missing partition keys."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, professional, detail-oriented",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "apm/multi-service",
+  "evidence": [
+    "unique_resource_by_env_service_name",
+    "blocked-resource",
+    "OTHER"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer quickly recognized the symptom as the unique-resource cardinality limit, confirmed it was expected behavior, and asked the customer what they needed from the Resources page. They then answered the follow-up questions about the limit and selection logic and suggested workarounds using Database Monitoring and service splitting.",
+    "steps": [
+      "Searched traces to confirm the resource spans exist",
+      "Identified the resource was likely grouped under OTHER because of the resource cardinality limit",
+      "Explained the expected behavior and pointed to the OTHER tooltip on the Resources page",
+      "Asked the customer which information they needed from the Resources page",
+      "Answered the customer's questions about the exact limit, how resources are selected, and workarounds",
+      "Recommended Database Monitoring and SQL comment propagation for ranking and parent attribution",
+      "Confirmed that splitting traffic into separate services keeps each under the per-service limit"
+    ],
+    "key_questions": [
+      "Can you show me exactly what information from the resource page you're looking to see for these queries?"
+    ],
+    "communication": [
+      "Opened with a clear statement that the behavior is expected and where to see the evidence in the UI. Answered numbered customer questions point by point and noted a side effect of the recommended change (service names written into the database as SQL comments). Gave a direct yes/no with the reasoning when the customer proposed a workaround."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

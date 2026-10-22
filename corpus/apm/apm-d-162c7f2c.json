@@ -1,0 +1,73 @@
+{
+  "id": "apm-d-162c7f2c",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-07-29",
+  "topic": "Review of a host-based Single Step Instrumentation (SSI) APM rollout plan, with a requested rollback plan",
+  "product_area": "APM - Single Step Instrumentation (host-based Linux, Java)",
+  "environment": [
+    "Linux hosts",
+    "Host-based Single Step Instrumentation",
+    "Java services running on WildFly",
+    "Datadog Agent configured through datadog.yaml with an apm_config block"
+  ],
+  "symptom_pattern": "The customer prepared an SSI rollout document for their Java services. They asked support to validate the configuration and to suggest a rollback plan, which the document lacked.",
+  "root_cause": "There was no fault to fix. The review found two problems in the plan. First, the Agent setting log_injection_enabled: true under apm_config in datadog.yaml is not a valid Agent setting and would be silently ignored. Log injection is configured on the tracer side. Second, the DD_APM_INSTRUMENTATION_LIBRARIES variable listed Java, Python, JS, PHP, .NET and Ruby, but the services in the rollout are all Java. The plan also had no rollback procedure.",
+  "resolution_path": [
+    "Support reviewed the customer's rollout document against the documentation for host-based SSI.",
+    "Support told the customer to remove the invalid log_injection_enabled line from datadog.yaml and to set DD_TRACE_LOGS_INJECTION_ENABLED=true on the tracer side instead.",
+    "Support recommended scoping DD_APM_INSTRUMENTATION_LIBRARIES to java:1 for this rollout, so injector packages for unused languages are not installed.",
+    "Support supplied a rollback plan: run dd-host-install --uninstall on the affected host, restart the instrumented services, and confirm that no -javaagent reference remains in the process command line.",
+    "Support confirmed that the rest of the guide matched the documented host-based SSI setup, including the install command, the datadog.yaml APM block and the UST tagging approach.",
+    "The customer confirmed all was good and asked to close the ticket."
+  ],
+  "info_needed": [
+    "The customer's rollout document, which describes the install command, datadog.yaml settings, tagging and verification steps",
+    "The languages of the services being instrumented"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite and professional",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "log_injection_enabled: true",
+    "apm_config",
+    "datadog.yaml",
+    "DD_TRACE_LOGS_INJECTION_ENABLED=true",
+    "application_monitoring.yaml",
+    "DD_APM_INSTRUMENTATION_LIBRARIES",
+    "java:1",
+    "dd-host-install --uninstall",
+    "-javaagent"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer checked the customer's rollout document against the documentation and flagged two configuration problems. They also wrote the missing rollback plan and confirmed that the rest of the guide was correct.",
+    "steps": [
+      "Reviewed the customer's SSI rollout document against the current documentation.",
+      "Flagged the invalid Agent setting and said where log injection is actually configured.",
+      "Recommended narrowing the instrumented libraries to Java only.",
+      "Wrote the rollback steps: uninstall, restart the services, and verify.",
+      "Confirmed that the other parts of the guide matched the documented setup.",
+      "Listed reference documentation topics for SSI on Linux, Java tracer setup and removing SSI.",
+      "After the customer confirmed, thanked them and asked for a rating."
+    ],
+    "key_questions": [],
+    "communication": [
+      "Opened with a short intro and then gave two clearly labelled findings, each with a reason and a fix. Set the rollback steps out as a short numbered-style procedure that ended in a verification step. Said what the uninstall does and does not change, and confirmed which parts of the guide were already correct. Closed with reference links by topic name."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-07"
+  }
+}

@@ -1,0 +1,57 @@
+# Ticket ({{ spec_label }}, {{ difficulty }} difficulty)
+Subject: {{ t.subject }}
+From: {{ t.customer.name }}, {{ t.customer.title }} at {{ t.customer.company }}
+
+{{ t.body }}
+{% for a in t.attachments %}
+[attachment {{ a.filename }}]
+{{ a.content }}
+{% endfor %}
+
+# Answer key
+```json
+{{ truth_json }}
+```
+
+# How the real TSE handled the source ticket
+{%- set a = source.get("tse_approach") or {} %}
+{%- set prov = source.get("provenance") or {} %}
+{% if source.get("kind") == "distilled" %}This scenario is based on a real solved ticket{% if prov.get("csat") == "good" %} where the customer rated the support **good**{% endif %}.{% else %}This scenario is based on a hand-written starter pattern, not a real ticket.{% endif %}
+Real resolution path: {{ (source.get("resolution_path") or []) | join(" → ") or "(not recorded)" }}
+{%- if a.get("summary") %}
+Approach summary: {{ a.summary }}
+{%- endif %}
+{%- if a.get("steps") %}
+Steps the real TSE took:
+{% for x in a.steps %}- {{ x }}
+{% endfor %}
+{%- endif %}
+{%- if a.get("key_questions") %}
+Questions the real TSE asked:
+{% for x in a.key_questions %}- {{ x }}
+{% endfor %}
+{%- endif %}
+{%- if a.get("communication") %}
+What made their communication work:
+{% for x in a.communication %}- {{ x }}
+{% endfor %}
+{%- endif %}
+{%- if a.get("customer_feedback") %}
+Customer feedback on the real ticket (paraphrased): {{ a.customer_feedback }}
+{%- endif %}
+{% if source.get("doc_links") %}Docs the real TSE shared: {{ source.doc_links | join(", ") }}{% endif %}
+
+# Simulation caveats
+{% if ungrounded %}The simulated customer included some details that the source ticket doesn't support. Do not penalize the TSE for being misled by them:
+{% for u in ungrounded %}{% for d in u.details %}- {{ d }}
+{% endfor %}{% endfor %}{% else %}(none){% endif %}
+
+# Facts uncovered during the conversation
+{{ revealed | join(", ") if revealed else "none" }} (out of {{ total_facts }})
+
+# Conversation transcript ({{ tse_turns }} TSE replies)
+{% for m in transcript %}
+--- {{ m.who }}{% if m.kind == "resolution" %} [marked as proposed resolution]{% endif %} ---
+{{ m.content }}
+{% endfor %}
+{% if not transcript %}(The TSE closed the ticket without replying.){% endif %}

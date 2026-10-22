@@ -1,0 +1,45 @@
+{
+  "id": "apm-agent-host-localhost",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-10-06",
+  "topic": "One service stopped sending traces after deploy",
+  "product_area": "APM / Tracer \u2192 Agent connectivity",
+  "environment": [
+    "Containerised services",
+    "Agent 7 container",
+    "Python ddtrace"
+  ],
+  "symptom_pattern": "Since a deploy, one Python service stopped sending traces; a Node service on the same host still shows up. App logs show nothing obviously broken.",
+  "root_cause": "The Python service's DD_AGENT_HOST was changed to localhost (or dropped, defaulting to localhost), so inside its container traces are sent to itself.",
+  "resolution_path": [
+    "Run ddtrace-run --info / check tracer startup logs for the agent URL and errors",
+    "Compare DD_AGENT_HOST between services",
+    "Set DD_AGENT_HOST to the Agent service name"
+  ],
+  "info_needed": [
+    "tracer startup log / --info output",
+    "env vars of affected vs healthy service",
+    "what changed in the deploy"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the tracer startup log line for the affected service?",
+      "customer_answer": "It says agent_url: http://localhost:8126 and agent_error: Connection refused."
+    },
+    {
+      "tse_question": "What changed in this morning's deploy?",
+      "customer_answer": "We moved env vars into a new config map, nothing that should matter."
+    }
+  ],
+  "customer_style": {
+    "tone": "busy, a bit impatient, under deadline",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

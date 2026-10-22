@@ -1,0 +1,31 @@
+# Edit service settings in config/*.env, not here.
+name: {{ meta.short_id }}
+services:
+  datadog-agent:
+    image: gcr.io/datadoghq/agent:7
+    env_file: [config/agent.env]
+    environment:
+      DD_API_KEY: ${DD_API_KEY:?set DD_API_KEY in .env (sandbox org key)}
+      DD_SITE: ${DD_SITE:-datadoghq.com}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: shop, POSTGRES_PASSWORD: shop, POSTGRES_DB: shop }
+    volumes: [./app/db-init.sql:/docker-entrypoint-initdb.d/init.sql:ro]
+  inventory:
+    build: ./app/backend
+    env_file: [config/inventory.env]
+    depends_on: [db, datadog-agent]
+  storefront:
+    build: ./app/frontend
+    env_file: [config/storefront.env]
+    ports: ["127.0.0.1::8080"]  # random free host port: docker compose port storefront 8080
+    depends_on: [inventory]
+  traffic:
+    image: curlimages/curl:8.10.1
+    entrypoint: ["sh", "/run.sh"]
+    volumes: [./app/traffic/run.sh:/run.sh:ro]
+    depends_on: [storefront]

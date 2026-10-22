@@ -1,0 +1,103 @@
+{
+  "id": "apm-d-a5926e45",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-20",
+  "topic": "OTLP-ingested spans missing http.client_ip attribute in Datadog APM despite being set in the OpenTelemetry Collector",
+  "product_area": "APM / OpenTelemetry trace ingestion (OTLP intake)",
+  "environment": [
+    "Kubernetes",
+    "OpenTelemetry Collector with transform processor",
+    "otlp_http exporter (not the Datadog exporter)",
+    "Multiple Collector pods sharing the same ConfigMap",
+    "Datadog EU site"
+  ],
+  "symptom_pattern": "A span attribute created in the Collector's transform processor (http.client_ip, copied from client.address) is visible in the Collector logs but absent on the span in Datadog. A control attribute created by the same transform statement block (test.client_ip) and other transform-created attributes such as http.url and http.server_name do arrive. Using a plain IPv4 value instead of the ::ffff: form made no difference.",
+  "root_cause": "Per the investigation, the Datadog backend removes the http.client_ip tag when the incoming OTLP payload lacks the telemetry.sdk.version and telemetry.sdk.language resource attributes. The customer's pipeline was not delivering those attributes, so http.client_ip was dropped while other attributes such as http.method and http.version remained.",
+  "resolution_path": [
+    "Support looked at a staging trace in Datadog and confirmed the attribute was missing on the span itself, while client.address and the control attribute were present.",
+    "Asked for the transform processor config, a second control attribute with a different name, confirmation that both Collector pods used the same ConfigMap and image, and the full traces pipeline and exporter setup.",
+    "Customer's config and answers ruled out the Collector side: the control attribute and http.client_ip came from the same statement block, pipeline and exporter, and other transform-created attributes arrived.",
+    "Asked the customer to test a plain IPv4 value for http.client_ip; the result was unchanged, and the issue was escalated to the OpenTelemetry engineering team.",
+    "Engineering found the backend removes http.client_ip when telemetry.sdk.version and telemetry.sdk.language resource attributes are missing, and the customer was asked to check that both are present and preserved through the pipeline.",
+    "The customer added the telemetry.* resource attributes; http.client_ip and the related geo-information enrichment then appeared in Datadog."
+  ],
+  "info_needed": [
+    "Transform processor configuration for the traces pipeline",
+    "Whether the control attribute is created in application code or in the same Collector transform",
+    "Whether all Collector pods use the same ConfigMap and image version",
+    "Exporter endpoint and full traces pipeline (receivers, processors, connectors, exporters), including whether the debug exporter shares the pipeline",
+    "Whether telemetry.sdk.version and telemetry.sdk.language resource attributes are present on the exported payload"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Where is the control attribute test.client_ip created, in application code or in the same Collector transform statement as http.client_ip, and can you share the transform configuration?",
+      "customer_answer": "Both are created in the Collector transform; the customer shared the transform config, which sets http.client_ip and a test.client_ip control attribute from client.address in the same block."
+    },
+    {
+      "tse_question": "Can you add a second control attribute with a different name and tell me whether it arrives in Datadog?",
+      "customer_answer": "The customer reported the control attribute arrives in Datadog but http.client_ip does not."
+    },
+    {
+      "tse_question": "Do both Collector pods use the same ConfigMap and image version?",
+      "customer_answer": "The customer confirmed they do."
+    },
+    {
+      "tse_question": "Can you set http.client_ip to a plain IPv4 value instead of the ::ffff: form and check whether it shows up?",
+      "customer_answer": "The customer tried it and got the same result: the Collector had the value but Datadog did not."
+    },
+    {
+      "tse_question": "Can you check that telemetry.sdk.version and telemetry.sdk.language are present and preserved throughout your pipeline?",
+      "customer_answer": "The customer added the telemetry.* attributes and http.client_ip then arrived in Datadog."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, cooperative and appreciative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "set(attributes[\"http.client_ip\"], attributes[\"client.address\"]) where attributes[\"client.address\"] != nil and attributes[\"http.client_ip\"] == nil",
+    "set(attributes[\"test.client_ip\"], attributes[\"client.address\"]) where attributes[\"client.address\"] != nil",
+    "set(attributes[\"test.client_ip2\"], attributes[\"client.address\"])",
+    "error_mode: ignore",
+    "trace_statements:",
+    "- context: span",
+    "telemetry.sdk.version",
+    "telemetry.sdk.language",
+    "http.client_ip"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer verified the symptom on a real trace, isolated the Collector from the intake side with control attributes and config review, then escalated to engineering and relayed the root cause with a clear verification step.",
+    "steps": [
+      "Inspected a staging trace in Datadog to confirm the attribute was absent on the span itself.",
+      "Requested the transform config and added a control attribute with a different name to narrow down the cause.",
+      "Asked for confirmation of consistent Collector pods and the full traces pipeline and exporter setup.",
+      "Concluded the Collector side was ruled out and escalated to the OpenTelemetry engineering team.",
+      "Requested a plain IPv4 test value to distinguish value-format from attribute-name causes.",
+      "Relayed engineering's finding about the missing telemetry.sdk resource attributes and asked the customer to verify them."
+    ],
+    "key_questions": [
+      "Where is the control attribute created, and what does the transform config look like?",
+      "Does a differently named control attribute set in the same transform arrive in Datadog?",
+      "Do all Collector pods use the same ConfigMap and image version?",
+      "What is the full traces pipeline and exporter setup?",
+      "Are telemetry.sdk.version and telemetry.sdk.language present and preserved through the pipeline?"
+    ],
+    "communication": [
+      "Explained what had been observed on the span and why each requested test mattered, gave specific example statements to add, stated clearly when the Collector side was ruled out and that the case was being escalated, and ended with a concrete verification step after sharing the engineering finding."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

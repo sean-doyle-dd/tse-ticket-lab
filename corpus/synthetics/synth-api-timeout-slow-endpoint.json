@@ -1,0 +1,44 @@
+{
+  "id": "synth-api-timeout-slow-endpoint",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-09-02",
+  "topic": "API test times out only for one endpoint",
+  "product_area": "Synthetics / API tests",
+  "environment": [
+    "HTTP API test",
+    "Internal or public API with heavy endpoint"
+  ],
+  "symptom_pattern": "An API test against an orders endpoint fails intermittently with a timeout while the health endpoint test on the same host always passes; customer thinks Synthetics is unreliable.",
+  "root_cause": "The endpoint's response time regularly exceeds the test's timeout (it performs a slow query), so the test legitimately fails. The service is slow, not the monitoring.",
+  "resolution_path": [
+    "Compare response timings across runs",
+    "Check the configured request timeout",
+    "Fix the endpoint performance or raise the timeout deliberately and alert on latency"
+  ],
+  "info_needed": [
+    "timings breakdown from results",
+    "test timeout setting",
+    "app-side latency data"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What does the timing breakdown show on a failed run?",
+      "customer_answer": "DNS and connect are fast, then 'download' or waiting is like 60+ seconds."
+    },
+    {
+      "tse_question": "Does the endpoint respond quickly with curl?",
+      "customer_answer": "Sometimes, but I just tried and it took over a minute."
+    }
+  ],
+  "customer_style": {
+    "tone": "impatient product owner",
+    "technical_level": "low",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "synthetics/private-location"
+}

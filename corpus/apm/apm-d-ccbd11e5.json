@@ -1,0 +1,74 @@
+{
+  "id": "apm-d-ccbd11e5",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-20",
+  "topic": "Enriching auto-discovered Software Catalog entities with definitions and API specs via GitOps or CI, and API metadata missing on APM endpoints when an env is selected",
+  "product_area": "Internal Developer Portal / Software Catalog (APM Endpoints)",
+  "environment": [
+    "Microservices architecture with 60+ APIs",
+    "Services auto-discovered through APM",
+    "GitHub source code integration enabled",
+    "OpenAPI specs generated dynamically at build/deploy time"
+  ],
+  "symptom_pattern": "The customer wanted to enrich APM-discovered catalog entities with metadata and OpenAPI specs through GitOps or CI/CD without creating duplicate entities. While testing with a manually created API definition, the endpoint metadata displayed on the APM Endpoints page seemed to disappear after a while. The customer suspected the GitHub integration was removing it.",
+  "root_cause": "The metadata was never removed or disassociated. It is not shown on the APM Endpoints page when a specific env is selected, and it appears only when no env is selected (env:*). The GitHub source code integration was not the cause. It only creates and updates entities from definition files found in repositories, so it does not delete entities created through the UI or API.",
+  "resolution_path": [
+    "Explained that an entity definition (schema v3) is linked to an auto-discovered entity when metadata.name exactly matches the service tag (DD_SERVICE), so it enriches the entity instead of creating a duplicate.",
+    "Explained that registering an entity before instrumentation works the same way, if metadata.name matches the DD_SERVICE that will be set later. Suggested a naming convention and a CI check comparing the two values.",
+    "Recommended keeping an entity.datadog.yaml in each repository with the GitHub integration so merged changes propagate to the Catalog automatically.",
+    "Clarified that the source code integration only syncs entity.datadog.yaml / service.datadog.yaml files, so a repository without one does not overwrite or delete UI/API-created entities. Overwrite risk only exists when two sources manage the same entity, so use a single source per entity (service via GitHub, API/OpenAPI definition via CI pipeline).",
+    "Confirmed the customer's API definition was correct and matched the endpoints discovered by APM. Advised viewing the spec on the APM Endpoints page with env:* selected, or through the API entity in the Developer Portal (View API button), where the full spec is available regardless of environment."
+  ],
+  "info_needed": [],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, collaborative, exploratory",
+    "technical_level": "high",
+    "urgency": "low"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "metadata.name",
+    "DD_SERVICE",
+    "entity.datadog.yaml",
+    "entity.datadog.yaml / service.datadog.yaml",
+    "kind: api",
+    "env:*",
+    "View API"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/internal_developer_portal/catalog/set_up/",
+    "https://docs.datadoghq.com/internal_developer_portal/catalog/entity_model/",
+    "https://docs.datadoghq.com/internal_developer_portal/catalog/set_up/discover_entities/",
+    "https://docs.datadoghq.com/getting_started/tagging/unified_service_tagging/",
+    "https://docs.datadoghq.com/internal_developer_portal/software_catalog/set_up/create_entities/",
+    "https://docs.datadoghq.com/internal_developer_portal/software_catalog/endpoints/",
+    "https://docs.datadoghq.com/internal_developer_portal/catalog/entity_model/native_entities/"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer first answered the architecture questions with a structured set of recommendations and doc links. When the customer reported the metadata disappearing, they reviewed the submitted definition, ruled out the GitHub integration as the cause, and explained where the spec can be viewed.",
+    "steps": [
+      "Gave numbered recommendations covering enrichment of discovered entities, pre-registration before instrumentation, and Git-based definitions, each with a doc link.",
+      "Suggested offering the customer the implementation services team, since the request fit that work.",
+      "Reviewed the customer's attached entity definition and checked the service reference and spec paths against the APM-discovered endpoints.",
+      "Explained how the GitHub integration behaves, including that a repository without a definition file does not delete entities.",
+      "Gave a design guideline of one source per entity to avoid overwrites.",
+      "Gave two ways to view the API spec: the APM Endpoints page with env:*, or the API entity in the Developer Portal."
+    ],
+    "key_questions": [],
+    "communication": [
+      "Structured the answer into numbered sections with a doc link for each point. Answered in the customer's language (Portuguese) on follow-up. Explained why the concern about overwriting applied only when two sources manage the same entity. Gave concrete viewing alternatives."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

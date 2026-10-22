@@ -1,0 +1,53 @@
+id: agent/proxy-openmetrics
+title: Agent behind a forward proxy, scraping an OpenMetrics endpoint
+description: >
+  Agent 7 whose outbound traffic must go through a Squid forward proxy that only allows
+  *.datadoghq.com, plus an internal OpenMetrics exporter protected by basic auth, and a Flask
+  app sending DogStatsD. Adapted from the TEE interview sandbox. Good for proxy, "no data at all",
+  OpenMetrics check failures (endpoint, auth, untyped metrics), logs and DogStatsD tickets.
+services: [datadog-agent, squid-proxy, openmetrics, shop-app]
+editable: [ddconf/datadog.yaml, conf.d/openmetrics.d/conf.yaml]
+params:
+  PROXY_HOST:
+    description: Host used in datadog.yaml proxy.http/https
+    default: squid-proxy
+    choices:
+      squid-proxy: healthy, the proxy container's DNS name
+      localhost: "broken: localhost inside the Agent container is the Agent itself, so the forwarder can't reach Datadog (connection refused)"
+  NO_PROXY_INTERNAL:
+    description: Whether datadog.yaml proxy.no_proxy lists the internal OpenMetrics host
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: the scrape of the internal exporter is sent through Squid, whose ACL returns 403"
+  OM_ENDPOINT:
+    description: openmetrics_endpoint in conf.d/openmetrics.d/conf.yaml
+    default: http://172.28.5.4:8000
+    choices:
+      http://172.28.5.4:8000: healthy, the exporter's static IP
+      http://localhost:8000: "broken: localhost inside the Agent container; connection refused"
+      http://172.28.5.4:8080: "broken: wrong port; connection refused"
+  OM_PASSWORD:
+    description: Basic-auth password in the OpenMetrics check config (the correct one is passw0rd)
+    default: passw0rd
+    choices:
+      passw0rd: healthy
+      password: "broken: exporter answers 401 Unauthorized"
+  OM_UNTYPED_OVERRIDE:
+    description: Whether the check maps the untyped cart_total_value metric to a gauge
+    default: "true"
+    choices:
+      "true": healthy, cart_total_value is collected
+      "false": "broken: cart_total_value is exposed as `untyped` and isn't collected; the other metric is"
+  LOGS:
+    description: Container log collection in datadog.yaml
+    default: enabled
+    choices:
+      enabled: healthy, logs_enabled true and container_collect_all true
+      disabled: "broken: logs_enabled false, so no container logs arrive"
+  DOGSTATSD_NON_LOCAL:
+    description: dogstatsd_non_local_traffic in datadog.yaml (shop-app sends DogStatsD from another container)
+    default: "true"
+    choices:
+      "true": healthy
+      "false": "broken: web.request.count from shop-app never arrives"

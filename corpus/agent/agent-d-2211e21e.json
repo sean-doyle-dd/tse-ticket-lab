@@ -1,0 +1,84 @@
+{
+  "id": "agent-d-2211e21e",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-08-17",
+  "topic": "Integrations missing from Fleet Automation and DDSQL on some Kubernetes nodes because the Agent's metadata payload is rejected with HTTP 413",
+  "product_area": "Agent / inventory metadata / Fleet Automation",
+  "environment": [
+    "Kubernetes",
+    "Agent 7.75.0 deployed as a DaemonSet",
+    "OpenMetrics autodiscovery via pod annotations",
+    "Logs agent collecting from many pods and containers",
+    "Large cluster where about 22 of 105 nodes were affected"
+  ],
+  "symptom_pattern": "A pod with valid openmetrics autodiscovery annotations does not appear in the integrations inventory (DDSQL / Fleet Automation). The Agent is running and healthy. About a fifth of the nodes in the cluster report zero integrations, including system checks such as cpu and disk. Sibling nodes with the same DaemonSet, API key and instance type report integrations normally.",
+  "root_cause": "The check itself was running fine, so this was not an autodiscovery failure. The Agent forwarder logged HTTP 413 errors on the metadata_v1 endpoint. On high-check-density nodes the integration inventory payload exceeded the backend size limit, so the metadata was dropped and the integrations never showed up. Most of the payload came from the logs agent registering a separate entry for every pod/container log source it collected from. The customer's flare analysis showed these were mostly accumulated failed tailers (about 2,000) against only about 68 running containers.",
+  "resolution_path": [
+    "Confirmed the check was running and that the missing data was an inventory-reporting problem, not an autodiscovery problem.",
+    "Found 413 payload-too-large errors on the metadata endpoint in the Agent forwarder logs and escalated to Agent engineering.",
+    "Suggested a client-side workaround of cutting log sources with container_include / container_exclude or per-pod logs_exclude annotations, and optionally disabling inventories_checks_configuration_enabled. The customer found this hard to apply at scale, and engineering later advised holding off on client-side changes.",
+    "Engineering shipped a preliminary fix. The main fix worked internally but needs a longer effort before GA.",
+    "As the interim mitigation, engineering increased the metadata payload limit across all production datacenters. This sharply reduced dropped payloads, and the customer confirmed they no longer saw the issue.",
+    "The permanent fix remains an ongoing engineering effort."
+  ],
+  "info_needed": [
+    "Agent forwarder logs showing the 413 errors on the metadata endpoint",
+    "Agent flare from an affected node",
+    "Comparison of an affected node with a healthy node in the same cluster",
+    "Number of log sources or containers on the affected nodes"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which namespaces or containers on the affected nodes could stop shipping logs to shrink the inventory payload?",
+      "customer_answer": "The customer said tuning logging per node is hard because one Helm chart manages thousands of Agents. They asked for global tunings instead, such as a blanket container log exclusion for init containers."
+    },
+    {
+      "tse_question": "After the payload limit increase, is the missing inventory data still occurring in your environment?",
+      "customer_answer": "The customer confirmed they no longer see the issue."
+    }
+  ],
+  "customer_style": {
+    "tone": "Friendly and informal, with enthusiastic praise at the end",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "HTTP 413 errors on the metadata_v1 endpoint",
+    "inventories_checks_configuration_enabled: false",
+    "container_include / container_exclude",
+    "ad.datadoghq.com/<container>.logs_exclude",
+    "DD_CONTAINER_EXCLUDE_LOGS",
+    "name:^datadog-lib-java-init$ name:^datadog-init-apm-inject$",
+    "dd.datadog_agent_integrations",
+    "Agent version: 7.75.0"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer worked out that the symptom was an inventory-reporting problem and not an autodiscovery failure. They traced it to dropped 413 metadata payloads, escalated to engineering, and kept the customer updated through a long fix cycle until a payload limit increase mitigated it.",
+    "steps": [
+      "Checked that the check was running despite its absence from the inventory.",
+      "Found the 413 errors on the metadata endpoint in the Agent forwarder logs.",
+      "Escalated to Agent engineering and summarized the root cause in an internal note.",
+      "Offered a client-side workaround, with its trade-offs explained.",
+      "Relayed engineering's advice to hold off on client-side changes once a fix was targeted.",
+      "Followed up regularly on the fixes, the payload limit increase and the GA timeline.",
+      "Confirmed the payload limit increase had rolled out to all production datacenters and told the customer."
+    ],
+    "key_questions": [],
+    "communication": [
+      "Gave a short background on the cause before the workaround. Stated the trade-off of the workaround plainly (excluded namespaces stop shipping logs). Sent proactive status updates with expected timelines, and told the customer when engineering advised holding off on changes. Closed out by explaining what the mitigation does and does not fix."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

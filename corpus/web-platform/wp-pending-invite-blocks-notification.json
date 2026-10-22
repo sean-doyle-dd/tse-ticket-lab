@@ -1,0 +1,44 @@
+{
+  "id": "wp-pending-invite-blocks-notification",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-09-19",
+  "topic": "Monitor alerts to an email address never arrive from one org",
+  "product_area": "Web Platform / Monitors notifications",
+  "environment": [
+    "Multi-org customer",
+    "Email-to-ticket integration address"
+  ],
+  "symptom_pattern": "Alerts to an email-to-ticket address are delivered from one org but not another; other recipients on the same monitor get alerts. No error on the monitor.",
+  "root_cause": "In the failing org, the address matches a pending user invitation (or disabled user), so it's treated as a user handle and silently excluded from delivery.",
+  "resolution_path": [
+    "Confirm other recipients receive",
+    "Check Organization Settings > Users for a pending invite or disabled user with that address",
+    "Delete the pending invite and re-test notifications"
+  ],
+  "info_needed": [
+    "monitor notification handles",
+    "user list status filter",
+    "behaviour across orgs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is that email address listed under users in the failing org?",
+      "customer_answer": "Hmm, it shows as Pending; someone invited it by mistake last year."
+    },
+    {
+      "tse_question": "Do other handles on the same monitor receive alerts?",
+      "customer_answer": "Yes, Slack and two people get them."
+    }
+  ],
+  "customer_style": {
+    "tone": "IT admin, methodical",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

@@ -1,0 +1,87 @@
+{
+  "id": "synthetics-d-3a5ae482",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-09-16",
+  "topic": "Browser tests on a Windows Private Location fail intermittently with timeouts when routed through a local Apache proxy",
+  "product_area": "Synthetics - Private Locations (browser tests)",
+  "environment": [
+    "Synthetics Private Location with multiple workers",
+    "New Private Location hosts running Windows 11, replacing older Ubuntu hosts",
+    "Private Location worker version not the latest",
+    "Apache proxy server on the same host as the Private Location workers, configured on the test"
+  ],
+  "symptom_pattern": "A customer replacing their Private Location hosts found that browser tests run on the new Windows 11 hosts fail intermittently with timeout errors. The same tests ran without problems on the old Ubuntu hosts. Most runs on the new hosts succeeded. The customer also noticed that cloned copies of the tests seemed to fail less often than the originals.",
+  "root_cause": "The engineering escalation concluded that the Apache proxy running alongside the Private Location workers was running out of worker threads. This caused the intermittent timeouts. The thread states that the intermittent failures suggested the cause was not a plain configuration error.",
+  "resolution_path": [
+    "Support identified that the tests were configured to use an Apache proxy on the same host as the Private Location workers, and that the workers were not on the latest version.",
+    "Support escalated to engineering, and the engineering investigation found that the proxy was running out of worker threads.",
+    "Support shared three workarounds. The first was to increase ThreadsPerChild on the Apache proxy on every Private Location host. The second was to add hostnames to the bypass list with the proxyTestRequestsBypassList parameter, to reduce background traffic through the proxy. The third was to check whether the proxy was needed for one particular host, and to exclude it from the proxy configuration if it was not.",
+    "The customer said they had already set ThreadsPerChild but the worker threads still ran out, and that the second and third workarounds were not feasible in their environment.",
+    "Support asked the customer to confirm whether the failures were resolved and, if so, what configuration change they made.",
+    "The tests ran normally for about two days afterwards and the ticket was marked solved. The thread does not say what exact change the customer made.",
+    "The follow-up question about why cloned tests failed less often than the originals was split into a separate ticket, and engineering communication on it continued."
+  ],
+  "info_needed": [
+    "Whether the original timeout failures were still occurring",
+    "If they were resolved, the exact configuration change the customer made",
+    "The latest Apache proxy configuration and log files, if the problem persisted (for engineering)",
+    "Examples of an original test and a cloned test where the clone rarely failed"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Has the browser test timeout failure been resolved?",
+      "customer_answer": "The thread records no direct answer. Support observed that the tests had been running normally for about two days."
+    },
+    {
+      "tse_question": "If it was resolved, what exact configuration change did you make?",
+      "customer_answer": "The thread records no answer to this."
+    },
+    {
+      "tse_question": "Can you give an example of an original test and a cloned test where the cloned test rarely failed?",
+      "customer_answer": "The thread records no answer. The engineer checking the shared links found that the cloned tests were also failing."
+    }
+  ],
+  "customer_style": {
+    "tone": "Polite and formal. They wrote in Japanese and appreciated detailed, hands-on support.",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "ThreadsPerChild",
+    "proxyTestRequestsBypassList",
+    "Browser test fails intermittently due to timeout error",
+    "this issue is caused by Apache Proxy worker thread running out"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Reviewed the Private Location setup and noted multiple workers and a worker version that was not the latest.",
+      "Found that the test used an Apache proxy on the same host as the workers.",
+      "Created an engineering escalation, which concluded the proxy was running out of worker threads.",
+      "Shared three workarounds with the customer: increase ThreadsPerChild, add hosts to proxyTestRequestsBypassList, and exclude a host from the proxy if it is not needed.",
+      "Held a troubleshooting call with the customer, where the customer asked the follow-up question about cloned tests.",
+      "Asked the customer to confirm whether the issue was resolved and what they changed."
+    ],
+    "key_questions": [
+      "Has the browser test timeout failure been resolved?",
+      "If it was resolved, what exact configuration change did the customer make?",
+      "Can the customer give an example of an original test and a cloned test where the clone rarely failed?"
+    ],
+    "communication": [
+      "Wrote to the customer in Japanese and followed with an English version. Explained why the follow-up question was moved to a separate ticket. Listed the confirmation questions as numbered items. Quoted the customer's own words from the call in the message so it was clear which question moved to the other ticket."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

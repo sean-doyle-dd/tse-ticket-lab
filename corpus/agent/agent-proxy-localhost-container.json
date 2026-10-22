@@ -1,0 +1,44 @@
+{
+  "id": "agent-proxy-localhost-container",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-09-05",
+  "topic": "Agent behind corporate proxy can't reach Datadog",
+  "product_area": "Agent / Proxy",
+  "environment": [
+    "Containerised Agent 7",
+    "Forward proxy (Squid) required for all egress"
+  ],
+  "symptom_pattern": "After moving the Agent from a VM to a container, it reports no data at all. Logs show connection refused when sending transactions; the proxy team says they see no requests.",
+  "root_cause": "datadog.yaml proxy settings still point at http://localhost:3128, which on the VM was the local proxy but inside the container is the Agent itself.",
+  "resolution_path": [
+    "Read forwarder errors in agent.log",
+    "Check proxy.http/https values",
+    "Point the proxy at the proxy container/host name and confirm with agent status"
+  ],
+  "info_needed": [
+    "agent.log forwarder errors",
+    "datadog.yaml proxy block",
+    "where the proxy runs relative to the Agent"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Where does the proxy run relative to the Agent container?",
+      "customer_answer": "It's another container called squid in the same compose project."
+    },
+    {
+      "tse_question": "Can you share the proxy section of datadog.yaml?",
+      "customer_answer": "proxy: http: http://localhost:3128, https: http://localhost:3128, same as on the VM."
+    }
+  ],
+  "customer_style": {
+    "tone": "busy infrastructure engineer, terse",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "agent/proxy-openmetrics"
+}

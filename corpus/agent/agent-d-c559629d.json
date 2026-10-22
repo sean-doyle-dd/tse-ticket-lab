@@ -1,0 +1,95 @@
+{
+  "id": "agent-d-c559629d",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-08-28",
+  "topic": "AIX Agent 7 release timing and per-mount-point disk utilization monitoring on the UNIX Agent",
+  "product_area": "Agent (AIX / UNIX Agent, disk check)",
+  "environment": [
+    "AIX 6.1 to 7.3, roughly 175 servers",
+    "UNIX Agent for AIX (disk check 1.1.6)",
+    "Agent 7 AIX dev build tested months earlier on a few servers"
+  ],
+  "symptom_pattern": "Customer asked for an approximate GA date for Agent 7 on AIX. They wanted to delay a disk utilization monitor filtered by filesystem mount point until the new agent was available, because an earlier test of mount-point filtering on the current agent had not worked.",
+  "root_cause": "Mount-point filtering was already available on the current UNIX Agent disk check. The earlier test failed because the customer used a metric that carries no mount tag and filtered on the device tag, which they associated with the new agent. The system.disk.* space metrics carry the mount tag. The Agent 7 AIX GA date was a separate question, and no firm date or version had been set.",
+  "resolution_path": [
+    "Told the customer there is no committed GA date for Agent 7 on AIX. GA is targeted for this quarter, with no firm date or version locked in.",
+    "Explained that the GA UNIX Agent is limited to infrastructure monitoring and DogStatsD custom metrics, with no APM, Live Process Monitoring, Cloud Network Monitoring or Log Management.",
+    "Explained that Agent 7 on AIX will officially support AIX 7.2 TL5 and later. AIX 7.2 TL2 to TL4 are expected to work without a support guarantee, and 6.1 hosts will not be covered.",
+    "Showed that the current disk check can filter with mount_point_whitelist/mount_point_blacklist in disk.d/conf.yaml. The system.disk.total, used, free and pct metrics carry a mount tag.",
+    "Advised building the monitor on system.disk.pct, or used/total, grouped or filtered by the mount tag.",
+    "Listed likely causes of the earlier failed test: a wrong config key name, or no Agent restart after editing disk.d/conf.yaml. The customer then confirmed they had used a metric without the mount tag."
+  ],
+  "info_needed": [
+    "Target AIX OS / TL / SP levels in scope",
+    "Key monitoring capabilities driving the Agent 7 requirement (Logs, APM, Processes, core metrics)",
+    "Current disk.d/conf.yaml from an affected host, if the earlier test needed checking"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which AIX OS / TL / SP levels are in scope for your environment?",
+      "customer_answer": "About 175 AIX servers spanning 6.1 to 7.3."
+    },
+    {
+      "tse_question": "Which monitoring capabilities are driving the Agent 7 requirement?",
+      "customer_answer": "A request for disk utilization monitoring. They want to filter by mount point and had hoped to wait for the newer disk check."
+    },
+    {
+      "tse_question": "Does filtering and tagging by mount point cover what you need, or do you need something beyond that?",
+      "customer_answer": "Filtering is enough. They need a disk utilization monitor filtered by filesystem name such as /, /home and /var, and asked which tag and metrics to use and whether config changes were needed."
+    },
+    {
+      "tse_question": "Can you share the current disk.d/conf.yaml from an affected host so we can check why your earlier test failed?",
+      "customer_answer": "Not needed. They realized they had used a metric without the mount tag and filtered on the device tag instead."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, practical",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "mount_point_whitelist",
+    "mount_point_blacklist",
+    "file_system_whitelist / file_system_blacklist",
+    "device_whitelist / device_blacklist",
+    "disk.d/conf.yaml",
+    "system.disk.pct",
+    "system.disk.read_count",
+    "mount:/home",
+    "it will officially support AIX 7.2 TL5 and later"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer first answered the roadmap question honestly: a quarter-level target, no committed date. They then caught that the customer's real blocker was disk monitoring and showed it already worked on the current agent, which removed the need to wait.",
+    "steps": [
+      "Reviewed similar cases and the internal Slack channel to confirm the GA status before replying.",
+      "Replied with the GA target and the current UNIX Agent's supported versions and feature limits, and asked for OS levels and capabilities needed.",
+      "Asked internally for a firmer timeline after the customer replied.",
+      "Flagged the Agent 7 support floor (AIX 7.2 TL5 and later) so the customer could plan for 6.1 hosts.",
+      "Checked the disk check source and explained its mount-point filtering and tags.",
+      "Gave the exact config keys, the tags and metrics, an example config, and the two likely causes of the failed earlier test.",
+      "Closed the ticket after the customer confirmed the cause."
+    ],
+    "key_questions": [
+      "Which AIX OS / TL / SP levels are in scope?",
+      "Which monitoring capabilities drive the Agent 7 requirement?",
+      "Does mount-point filtering and tagging cover what you need?",
+      "Can you share the current disk.d/conf.yaml from an affected host?"
+    ],
+    "communication": [
+      "Was open about there being no firm date and did not over-promise. Warned about the support floor early so the customer could plan. Gave exact config keys, metric names and an example config, with a restart reminder. Offered to review the customer's config if the fix did not work."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-08"
+  }
+}

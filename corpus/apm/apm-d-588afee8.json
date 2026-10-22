@@ -1,0 +1,62 @@
+{
+  "id": "apm-d-588afee8",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-08",
+  "topic": "Logging HTTP 400 responses as warnings instead of errors in APM",
+  "product_area": "apm",
+  "environment": [
+    "APM traces",
+    "HTTP client spans (operation http.request)"
+  ],
+  "symptom_pattern": "HTTP client spans with status code 400 for one specific API endpoint are marked as errors in APM. This triggered an anomaly alert, and the customer wants those spans treated as warnings instead.",
+  "root_cause": "APM spans have no warning state. A span's status is either ok or error, so 400 responses cannot be relabeled as warnings.",
+  "resolution_path": [
+    "Confirmed the customer's request was to show 400 responses for a specific API as warnings instead of errors",
+    "Explained that APM has no warning state for a span, only ok or error",
+    "Shared the docs page on span status, which lists ok and error as the only values"
+  ],
+  "info_needed": [],
+  "qa_pairs": [
+    {
+      "tse_question": "Hi, how are you doing today?",
+      "customer_answer": "The customer replied that they were fine, then shared an APM trace query for the errored HTTP client spans."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and brief",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "APM has no \"warning\" state for a span, a span is either OK or error, nothing in between.",
+    "I could see status 400 is logged as an error,can i log it as an warning?"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/ddsql_reference/data_directory/dd/dd.spans.dataset/#:~:text=Applies%20to%3A%20all.-,Status,Span%20completion%20status%20(ok%2C%20error).%20Applies%20to%3A%20all.,-Ingestion%20Reason"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer acknowledged the request, checked it, and then gave a direct answer. APM spans can only be ok or error, so 400s cannot be relabeled as warnings. They backed this up with a documentation link.",
+    "steps": [
+      "Greeted the customer and asked how they were doing",
+      "Acknowledged the issue and said they were checking",
+      "Told the customer that APM has no warning state for spans",
+      "Sent the docs link on span status"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Gave a short, direct explanation of the limitation and backed it with a docs link. Did not offer an alternative approach."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

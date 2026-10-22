@@ -1,0 +1,6 @@
+# HELP items_added_to_customer_cart
+# TYPE items_added_to_customer_cart gauge
+items_added_to_customer_cart 2
+# HELP cart_total_value
+# TYPE cart_total_value untyped
+cart_total_value 350.45

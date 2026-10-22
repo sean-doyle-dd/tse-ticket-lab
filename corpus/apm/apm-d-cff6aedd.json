@@ -1,0 +1,84 @@
+{
+  "id": "apm-d-cff6aedd",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-18",
+  "topic": "APM Endpoints page not listing endpoints for PHP Slim framework operation, plus confusion over low request counts and high indexed spans",
+  "product_area": "APM - Endpoints / Resources UI (PHP tracing, Slim integration)",
+  "environment": [
+    "Kubernetes",
+    "PHP",
+    "Slim framework (slim.request operation)",
+    "APM tracing with retention filters"
+  ],
+  "symptom_pattern": "Customer saw very few requests for a resource in the APM resource view compared to their internal request logger, and saw an unexplained jump in indexed spans for a separate service. After investigation, the requests were found under the Resources page, but the endpoints with the slim.request operation did not appear in the APM Endpoints page, while other endpoints appeared normally.",
+  "root_cause": "Two parts. (1) The customer's own routing: requests were being sent to a different subdomain/service than intended (the apache-fronted service instead of the API service), which explained both the low request counts on the intended service and the increased indexed span volume; the support engineer also attributed the apache spike to a large number of 401 errors from external parties. (2) A Datadog-side gap: endpoints with operation slim.request coming from the Slim framework were not being tracked by the APM Endpoints feature, so they were missing from the Endpoints page. Support for this was added.",
+  "resolution_path": [
+    "Explained that Requests counts on Service/Resource pages come from trace metrics computed on 100% of traffic, and suggested grouping by resource_name and operation_name in the Trace Explorer to find where requests were attributed",
+    "Clarified that the Indexed Spans view with a duration filter only shows a retained sample, and recommended graphing trace metrics for the slim.request hits grouped by resource_name for true counts",
+    "Held a call with the customer and requested tracer debug logs; confirmed the apache service spike was due to a spike in 401 errors from external parties",
+    "Customer found that requests were going to an unintended service, which explained the missing requests and the span indexing increase",
+    "The remaining problem, endpoints not listed in the APM Endpoints page, was escalated internally to the APM team",
+    "Internal team pushed a fix to production adding support for slim.request endpoints from the Slim framework",
+    "Customer confirmed the Endpoints list was up to date and the ticket was closed"
+  ],
+  "info_needed": [
+    "Where the missing requests are attributed (service, resource name, operation name) via trace metrics or a single traced request",
+    "Whether the apache service was recently onboarded to APM or redeployed around the time of the span jump",
+    "Which retention filter is keeping the spans",
+    "Tracer debug logs for the affected application"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you check whether the apache service was onboarded to APM or redeployed around the time indexed spans began?",
+      "customer_answer": "The service is deployed almost daily, and the increase did not line up with any retention filter change or specific deploy time."
+    },
+    {
+      "tse_question": "Can you take one request your tracker logged and find where it maps in Datadog by service, resource and operation?",
+      "customer_answer": "The customer said that the collection/customer endpoint had no errors so no traces were retained to open, and asked how to debug further."
+    },
+    {
+      "tse_question": "Please share tracer debug logs for the affected application.",
+      "customer_answer": "The customer instead found on their own that requests were being sent to an unintended service, which explained most of the problem, leaving only the Endpoints page listing issue."
+    }
+  ],
+  "customer_style": {
+    "tone": "direct, somewhat frustrated by misunderstandings but cooperative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "trace.slim.request.hits{service:tunaiku_crml_api}",
+    "slim.request"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer first explained how trace metrics, indexed spans and retention filters differ and gave concrete ways to find the missing requests. They held a call, then escalated the unresolved Endpoints page gap to the APM team and relayed the fix.",
+    "steps": [
+      "Explained that request counts come from trace metrics on all traffic, not sampled data",
+      "Directed the customer to group by resource_name and operation_name in the Trace Explorer",
+      "Corrected the customer's view by explaining that Indexed Spans with a duration filter is only a sample, and suggested graphing trace metrics instead",
+      "Scheduled a call and requested tracer debug logs",
+      "Confirmed the apache span spike was caused by a spike in 401 errors",
+      "Escalated the Endpoints page issue to internal APM teams via Slack and an escalation",
+      "Relayed that the fix had been pushed to production and asked the customer to confirm"
+    ],
+    "key_questions": [
+      "Take one request your tracker logged and find which service, resource and operation it maps to in Datadog",
+      "Share tracer debug logs for the affected application",
+      "Was apache onboarded to APM or redeployed around the time of the span jump?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

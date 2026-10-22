@@ -1,0 +1,31 @@
+# Agent main configuration. Restart after editing: docker compose restart datadog-agent
+log_level: info
+hostname: "{{ meta.short_id }}-proxy-host"
+
+proxy:
+  http: http://{{ p.PROXY_HOST }}:3128
+  https: http://{{ p.PROXY_HOST }}:3128
+{%- if p.NO_PROXY_INTERNAL == "true" %}
+  no_proxy:
+    - "172.28.5.4"
+{%- endif %}
+
+use_dogstatsd: true
+dogstatsd_port: 8125
+dogstatsd_non_local_traffic: {{ p.DOGSTATSD_NON_LOCAL }}
+dogstatsd_metrics_stats_enable: true
+
+{%- if p.LOGS == "enabled" %}
+logs_enabled: true
+logs_config:
+  container_collect_all: true
+  force_use_http: true
+{%- else %}
+logs_enabled: false
+logs_config:
+  container_collect_all: false
+{%- endif %}
+
+tags:
+  - "env:sandbox"
+  - "sandbox:{{ meta.short_id }}"

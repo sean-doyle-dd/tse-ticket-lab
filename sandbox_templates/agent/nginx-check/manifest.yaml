@@ -1,0 +1,41 @@
+id: agent/nginx-check
+title: NGINX integration via Docker Autodiscovery
+description: >
+  An NGINX web container configured through Docker label Autodiscovery (the check and log
+  config live in container labels), a containerised Agent 7 and a small traffic generator.
+  Good for "integration shows no data", Autodiscovery template mistakes, stub_status/ACL
+  problems and logs that arrive but aren't parsed.
+services: [datadog-agent, web, traffic]
+editable: [docker-compose.yml, nginx/nginx.conf]
+params:
+  STUB_STATUS:
+    description: Whether nginx.conf exposes the stub_status location on port 81
+    default: enabled
+    choices:
+      enabled: healthy
+      disabled: "broken: /nginx_status returns 404, so the nginx check errors"
+  STATUS_ACL:
+    description: Access rules on the status location
+    default: allow_all
+    choices:
+      allow_all: healthy (sandbox only)
+      localhost_only: "broken: allow 127.0.0.1; deny all, so the Agent gets 403 Forbidden"
+  AD_CHECK_NAME:
+    description: Check name used in the com.datadoghq.ad.checks label
+    default: nginx
+    choices:
+      nginx: healthy
+      ngnix: "broken: typo, no such integration, so nothing is scheduled for the container (configcheck shows an error)"
+  STATUS_URL:
+    description: nginx_status_url in the Autodiscovery label
+    default: "http://%%host%%:81/nginx_status/"
+    choices:
+      "http://%%host%%:81/nginx_status/": healthy
+      "http://localhost:81/nginx_status/": "broken: localhost is the Agent container, so connection refused"
+      "http://%%host%%:80/nginx_status/": "broken: wrong port, 404 from the main server block"
+  LOG_SOURCE:
+    description: The source value in the com.datadoghq.ad.logs label
+    default: nginx
+    choices:
+      nginx: healthy, logs go through the NGINX integration pipeline
+      webserver: "broken: logs arrive but aren't parsed (no NGINX pipeline matches), so no http.status_code facet"

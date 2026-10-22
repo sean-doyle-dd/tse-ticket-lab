@@ -1,0 +1,63 @@
+{
+  "id": "web-platform-d-67492d28",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-06",
+  "topic": "Identifying what is still making calls with an application key",
+  "product_area": "Account management / API and application keys",
+  "environment": [
+    "Datadog organization with an application key created by a former employee",
+    "Application key shows recent last-used activity in the Application Keys UI"
+  ],
+  "symptom_pattern": "Customer sees an application key belonging to a former employee still showing recent usage and wants to know what is calling with it (IPs, API keys, etc.).",
+  "root_cause": "All requests made with the application key during the past week came from a third-party secret-scanning service's infrastructure. The service ran a roughly daily cycle of calls using the application key together with one of the customer's API keys. Both source IPs were on the vendor's published egress address list.",
+  "resolution_path": [
+    "Support engineer pulled internal Datadog HQ logs for requests made with the application key over the past week",
+    "Found the same five-call cycle repeating about once a day, with the same user agents and endpoints each time",
+    "Verified the two source IPs against the scanning vendor's published list of egress addresses",
+    "Identified which application key and which API key were being used together",
+    "Reported the findings to the customer, who then took the information to the right internal resources to track down the source on their side"
+  ],
+  "info_needed": [],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, concise, appreciative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "python-requests/2.33.0",
+    "GET /api/v2/validate_keys",
+    "GET /api/v2/current_user/application_keys",
+    "GET /api/v2/api_keys",
+    "GET /api/v1/org",
+    "GET /api/v2/current_user"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer pulled the key's usage from internal logs, grouped the requests into a repeating call pattern, and attributed them to a third-party scanner by checking the source IPs against the vendor's published list. They then gave the customer the pattern, the attribution and the paired API key.",
+    "steps": [
+      "Reviewed internal HQ logs for the application key over the past week",
+      "Summarized the repeating five-call sequence with user agents, endpoints and status codes",
+      "Checked the source IPs against the vendor's published egress address list",
+      "Identified the application key and the API key used together",
+      "Sent a clear summary table to the customer and offered further help",
+      "Followed up after the customer confirmed the information was useful"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Opened with a short introduction, then gave a structured table of the request pattern and the key pairing. Explained how the source was verified (the vendor's published IP list) and closed by offering more help."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

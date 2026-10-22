@@ -1,0 +1,103 @@
+{
+  "id": "synthetics-d-ef5d3cca",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-10-02",
+  "topic": "Mobile app test Edit page shows both EU and US locations selected for a test configured with a single location",
+  "product_area": "Synthetics - Mobile Application Testing (test edit UI, Devices/locations selection)",
+  "environment": [
+    "Synthetics mobile application test",
+    "Test configured with the EU (Frankfurt) location only",
+    "Device available in both EU and US locations",
+    "Test configuration managed through the UI and the Synthetics mobile test API"
+  ],
+  "symptom_pattern": "The API returns a single location (aws:eu-central-1) for a mobile test, but the Edit page opens with both EU and US locations selected, before any change. Saving from the UI, for example to update the notification message, adds the second location and the test runs from both. The UI offers no way to deselect one location or keep a single location. A cloned test and other mobile tests behave the same way.",
+  "root_cause": "The mobile test Edit page showed both locations as selected on load, even though the saved configuration had only one location. The support engineer first pointed to the Devices section defaulting to All Locations for a device available in both regions. Saving then wrote both locations, and the HAR showed successful updates adding aws:us-west-2 alongside aws:eu-central-1, with no 4xx or 5xx errors. The thread does not describe the underlying code defect. It was raised internally as a product issue and a fix was released.",
+  "resolution_path": [
+    "Support engineer explained that the Devices section offers All locations, EU only or US only, and that a device available in both regions runs in each one.",
+    "Asked the customer to select EU (Frankfurt) only in Devices and save.",
+    "Asked for a screen recording, a HAR file, other affected test IDs and the time of the colleague's save. The customer reproduced the issue on a cloned test and supplied a HAR file.",
+    "HAR analysis showed successful updates adding the US location alongside the EU location, with no HTTP errors.",
+    "Raised the issue internally with the Synthetics team.",
+    "Gave a workaround: avoid UI saves on the affected test, change settings such as the notification message through the API, and re-fetch the test to confirm the locations field.",
+    "A fix was released. The customer was asked to reopen the Edit page, select only EU (Frankfurt), save, reopen and re-check via the API.",
+    "Customer confirmed the issue was resolved."
+  ],
+  "info_needed": [
+    "Short screen recording of opening the Edit page without changing anything, showing the Devices selection and whether Unsaved Changes appears",
+    "Whether the page loads on All Locations straight away",
+    "Result of selecting only EU (Frankfurt), saving and reopening the Edit page",
+    "HAR file captured while loading the Edit page",
+    "Whether other mobile tests behave the same way, with their test IDs",
+    "Approximate time the colleague saved the test, to review version history"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Does the Edit page load on All Locations straight away, before you change anything?",
+      "customer_answer": "Yes. A cloned test configured with EU only opened with both EU and US selected before any changes, and saving updated it to run from both."
+    },
+    {
+      "tse_question": "After selecting only EU (Frankfurt) and saving, does it stay EU-only when you reopen the Edit page?",
+      "customer_answer": "After reopening the Edit page there seemed to be no way to deselect one location or keep a single location. The UI only allowed both together."
+    },
+    {
+      "tse_question": "Do you see the same behavior on other mobile tests in your organization?",
+      "customer_answer": "Yes, the same behavior appeared on other mobile tests, so it was not isolated to one test."
+    },
+    {
+      "tse_question": "Can you provide a screen recording and a HAR file of the Edit page load?",
+      "customer_answer": "They cloned the test, attached a video of the behavior and attached a HAR capture."
+    }
+  ],
+  "customer_style": {
+    "tone": "professional, structured and polite",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "a device available in both locations will run in each one",
+    "options.device_ids",
+    "options.mobileApplication",
+    "aws:eu-central-1",
+    "aws:us-west-2",
+    "Unsaved Changes",
+    "no HTTP 4xx or 5xx errors"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Read the screenshot and explained the Devices section options (All locations, EU only, US only).",
+      "Gave steps to select EU (Frankfurt) only and verify through the API.",
+      "Requested a recording, a HAR file, other affected tests and the save time to check whether the default selection was expected.",
+      "Analyzed the HAR and confirmed that the saves added the US location with no HTTP errors.",
+      "Raised the issue internally with the Synthetics team and updated the customer.",
+      "Recommended using the API for changes in the meantime and re-fetching to verify.",
+      "After the fix was released, asked the customer to retest and to come back with a recording and test ID if it persisted."
+    ],
+    "key_questions": [
+      "Does the Edit page load on All Locations straight away, before any change?",
+      "Does selecting only EU (Frankfurt) and saving stay EU-only after reopening the Edit page and re-fetching via the API?",
+      "Do other mobile tests show the same behavior?",
+      "Can you provide a short screen recording and a HAR file of loading the Edit page?"
+    ],
+    "communication": [
+      "Listed the requested items clearly as separate bullet-style asks",
+      "Explained why the recording and HAR were needed (to confirm whether the default selection was expected)",
+      "Reminded the customer to blur sensitive information before sharing",
+      "Gave a workaround with a verification step while the internal investigation was open",
+      "Gave retest steps after the fix and said what to send if it still failed"
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

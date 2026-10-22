@@ -1,0 +1,72 @@
+{
+  "id": "agent-d-98f8902f",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-09-29",
+  "topic": "Keeping an integration password out of a static conf.yaml by using environment variables or secrets management",
+  "product_area": "Agent / Secrets management and Autodiscovery template variables",
+  "environment": [
+    "Docker containers running the Agent",
+    "JMX-based integration (Wildfly) configured with a static conf.yaml",
+    "Docker Compose used to pass runtime environment variables"
+  ],
+  "symptom_pattern": "The customer hard-codes an integration password in a static conf.yaml stored in their repos. They want the Agent to read it from an environment variable passed at runtime. The integration works, so this is a security and best-practice question, not a fault.",
+  "root_cause": "There was no malfunction. The customer's config is static (non-Autodiscovery), because it hard-codes the jmx_url and has no template variables. Autodiscovery's %%env_<VAR>%% variable only applies to Autodiscovery-based configuration, such as labels or annotation templates. Static conf.yaml files need Secrets Management with the ENC[] syntax instead.",
+  "resolution_path": [
+    "Explained that the Agent has two mechanisms for keeping secrets out of config: Autodiscovery %%env_<VAR>%% and Secrets Management with ENC[].",
+    "Clarified that %%env_<VAR>%% resolves from the Agent process environment but only works in Autodiscovery-based configs such as labels or annotation templates.",
+    "Explained that ENC[] with a secrets backend works with static conf.yaml files and is compatible with Docker secrets through the bundled readsecret.sh / readsecret.py helper scripts.",
+    "Noted caveats: secrets are cached for the Agent's lifetime, so rotating one needs a restart. Combining %%env_%% and ENC[] in one value is not recommended. JMX-specific behavior had not been independently verified.",
+    "Confirmed from the customer's config that it is static (no template variables) and explained the difference between static and Autodiscovery configs.",
+    "Shared documentation links. The customer said the explanation was helpful and that they would review the docs."
+  ],
+  "info_needed": [
+    "How the integration config gets into the container (static file or Autodiscovery labels/annotations)"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "How does the integration config get into the container, as a static file or through Autodiscovery?",
+      "customer_answer": "The config is a static file with a hard-coded JMX URL and no template variables, so it is not Autodiscovery-based."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, practical",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "%%env_<VAR>%%",
+    "%%env_REDIS_PASSWORD%%",
+    "ENC[]",
+    "readsecret.sh",
+    "readsecret.py",
+    "jmx_url"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/docker/integrations",
+    "https://docs.datadoghq.com/integrations/redisdb/?lang_pref=en"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer set out the two relevant mechanisms and said which one fits which config style. They then checked the customer's actual config type to pick the right one, and flagged the caveats and what they had not verified.",
+    "steps": [
+      "Acknowledged the request and took time to investigate.",
+      "Laid out Option 1, Autodiscovery %%env_<VAR>%%, and Option 2, Secrets Management with ENC[].",
+      "Noted the limits of each: Autodiscovery only, secrets cached for the Agent's lifetime, and combining the two not recommended.",
+      "Confirmed the customer's config was static by looking at the hard-coded jmx_url.",
+      "Explained static versus Autodiscovery configs and shared documentation."
+    ],
+    "key_questions": [],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-09"
+  }
+}

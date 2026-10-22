@@ -1,0 +1,67 @@
+{
+  "id": "web-platform-d-5bc245b5",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-19",
+  "topic": "Request to enable the IP Allowlist feature for an organization, and lockout recovery procedure",
+  "product_area": "Account Management / IP Allowlist (feature enablement)",
+  "environment": [
+    "Datadog US1 site",
+    "Enterprise billing plan"
+  ],
+  "symptom_pattern": "Customer admin asks Support to enable the IP Allowlist feature so UI and API access is limited to corporate and approved IP ranges. They also ask what the recovery procedure is if they lock themselves out.",
+  "root_cause": "Not a defect. The IP Allowlist feature is not self-service. Support had to enable it for the org after confirming the org was on a Pro+ or Enterprise billing tier.",
+  "resolution_path": [
+    "Support confirmed the org was on the Enterprise billing tier.",
+    "Support enabled the feature for the org by getting a feature-flag config change (a pull request) approved and merged.",
+    "Support told the customer the feature was enabled and pointed them to the IP Allowlist page in organization settings and to the docs.",
+    "Support answered the lockout question: the system has lockout-prevention constraints, and if a lockout still happens a Datadog Admin can open a support ticket, after which Support can add a new IP address to the allowlist."
+  ],
+  "info_needed": [
+    "Billing plan tier of the org (Pro+ or Enterprise)",
+    "Datadog site and org identification"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "formal, polite, well prepared",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "At least one entry in the IP allowlist contains your current IP",
+    "The allowlist contains at least one entry"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/account_management/org_settings/ip_allowlist/",
+    "https://docs.datadoghq.com/api/latest/ip-allowlist/"
+  ],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer checked internal runbooks and the FAQ, confirmed the org's billing tier qualified, and had the feature flag change approved and merged. They answered the lockout question up front and posted the final confirmation with docs links once the feature was live.",
+    "steps": [
+      "Reviewed the internal operations playbook and IP Allowlist support FAQ, including the lockout-recovery section.",
+      "Verified the org was on a qualifying billing tier (Pro+ or Enterprise).",
+      "Opened a configuration pull request to enable the feature flag and requested approval.",
+      "Replied to the customer early with an introduction, a status note that enablement was in progress, and a direct answer to the lockout question.",
+      "After the pull request was merged, told the customer the feature was enabled, where to configure it, and which docs to read, then tentatively closed the case."
+    ],
+    "key_questions": [],
+    "communication": [
+      "Answered the customer's lockout question directly in the first reply, before enablement was done.",
+      "Listed the lockout-prevention constraints as short bullet points.",
+      "Said who can request recovery (a Datadog Admin via a support ticket).",
+      "Gave the settings page and both docs links in the closing message.",
+      "Said the case was tentatively closed and invited the customer to reach out again."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

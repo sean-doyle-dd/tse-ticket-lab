@@ -1,0 +1,43 @@
+{
+  "id": "agent-nginx-stub-status-acl",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-07-30",
+  "topic": "NGINX check fails with 403 after hardening",
+  "product_area": "Agent / NGINX integration",
+  "environment": [
+    "NGINX in containers",
+    "Security hardening of server configs"
+  ],
+  "symptom_pattern": "The nginx check started failing with 403 Forbidden after the security team applied a hardened nginx.conf; the site itself works.",
+  "root_cause": "The stub_status location now only allows 127.0.0.1, so requests from the Agent (another container/IP) are denied.",
+  "resolution_path": [
+    "Read the check error in agent status",
+    "Look at the allow/deny rules on the status location",
+    "Allow the Agent's network/IP or serve status on an internal-only port"
+  ],
+  "info_needed": [
+    "agent status error",
+    "nginx.conf status location",
+    "where the Agent runs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the location block for the status endpoint?",
+      "customer_answer": "location /nginx_status/ { stub_status; allow 127.0.0.1; deny all; }"
+    },
+    {
+      "tse_question": "Does curl to the status URL from inside the Agent container work?",
+      "customer_answer": "It returns 403."
+    }
+  ],
+  "customer_style": {
+    "tone": "professional, security-conscious, wants to keep things locked down",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": "agent/nginx-check"
+}

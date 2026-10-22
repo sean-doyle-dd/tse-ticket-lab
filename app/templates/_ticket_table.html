@@ -1,0 +1,17 @@
+{% set rows = rows if rows is defined else recent %}
+<table class="table">
+  <thead><tr><th>Ticket</th><th>Subject</th><th>Spec</th><th>Difficulty</th><th>Status</th><th class="num">Score</th><th>Created</th></tr></thead>
+  <tbody>
+  {% for s in rows %}
+    <tr>
+      <td><a href="{{ url_for('ui.ticket', scenario_id=s.id) }}" class="mono">{{ s.ref }}</a></td>
+      <td class="subject-cell">{% if s.ticket %}{{ s.ticket.subject }}{% elif s.status == 'failed' %}<span class="muted">Generation failed</span>{% else %}<span class="muted">Generating…</span>{% endif %}</td>
+      <td>{{ SPECS.get(s.spec, {}).get('label', s.spec) }}</td>
+      <td><span class="pill pill-{{ s.difficulty }}">{{ s.difficulty | capitalize }}</span></td>
+      <td><span class="status status-{{ s.status }}">{{ s.status | capitalize }}</span></td>
+      <td class="num">{% if s.grade %}<span class="score score-{{ 'good' if s.grade.overall >= 75 else 'ok' if s.grade.overall >= 50 else 'low' }}">{{ s.grade.overall }}</span>{% else %}–{% endif %}</td>
+      <td class="muted"><time datetime="{{ s.created_at.isoformat() }}Z" data-relative>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</time></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

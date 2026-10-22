@@ -1,0 +1,73 @@
+{
+  "id": "synthetics-d-994517f0",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-08-14",
+  "topic": "Clarification of the Synthetics public IP migration for the remaining AWS Managed Locations, for allowlisting",
+  "product_area": "Synthetics - Managed Locations public IP ranges",
+  "environment": [
+    "Synthetics API tests",
+    "AWS Managed Locations",
+    "Customer systems allowlist Synthetics traffic by source IP"
+  ],
+  "symptom_pattern": "The customer saw an in-app banner announcing a public IP range migration for six AWS Managed Locations. They allowlist Synthetics source IPs and asked which ranges are old and which are new. They also asked when the cutover happens, whether old and new ranges overlap, and when the old ranges can be removed from their allowlists.",
+  "root_cause": "No fault. This was an informational question about a planned migration of managed-location public IPs. The new IP ranges were already published in the official synthetics IP ranges JSON, and the old ranges are kept for the cutover and as a rollback option.",
+  "resolution_path": [
+    "The support engineer confirmed the org and checked with the product and escalations team.",
+    "The support engineer explained that the new ranges are the /29 CIDR blocks and were added to the IP ranges JSON on February 24, 2026.",
+    "The support engineer explained that September 1 is the start of the rollout for the six remaining locations, not a final cutover date. Old IPs stay in use for some period during the cutover, with rollback to them if issues occur.",
+    "The support engineer said the old ranges will eventually be removed but no date is set, and that no public page covers this migration. It is communicated through the in-app banner.",
+    "The support engineer advised adding the new /29 ranges to the allowlist now and keeping the old /32 ranges as a rollback option. They advised opening a follow-up ticket about a month after the rollout (October) to confirm when the old ranges can be removed."
+  ],
+  "info_needed": [
+    "Datadog org name, to associate the requester with an org"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What is the name of the Datadog org this is for? No associated org was found for the email used on the ticket.",
+      "customer_answer": "The customer gave the org name and attached a screenshot of the settings screen."
+    }
+  ],
+  "customer_style": {
+    "tone": "formal, polite and structured",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "New locations can be identified by the /29 CIDR blocks.",
+    "Sept 1 is the start of the rollout for the six remaining locations.",
+    "Eventually we will remove the old IP ranges, but we do not have a date for that yet."
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer first confirmed the org, then checked with the product and escalations team. They then answered each of the customer's numbered questions in order and gave concrete allowlist next steps. They were upfront about what was not yet known.",
+    "steps": [
+      "Asked for the org name because the requester's email was not linked to any org.",
+      "Told the customer the question was being checked with the product and escalations team.",
+      "Answered each numbered question in turn with the information from the team.",
+      "Stated that no public page covers this migration and that it is communicated through the in-app banner.",
+      "Gave recommended next steps: add the new ranges now, keep the old ones, and open a follow-up ticket after the rollout.",
+      "Marked the ticket solved after the customer confirmed."
+    ],
+    "key_questions": [
+      "What is the name of the Datadog org this is for?"
+    ],
+    "communication": [
+      "Mirrored the customer's numbered questions and answered each one directly.",
+      "Said plainly that no end date for the old ranges was available and that no public doc exists.",
+      "Closed with explicit next steps, including when to follow up.",
+      "Told the customer a check with the product and escalations team was underway while waiting."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-08"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "id": "apm-d-6ee4405f",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-08",
+  "topic": ".NET tracer on Windows Server causing Windows job services to fail after machine-wide COR_ENABLE_PROFILING",
+  "product_area": "APM - .NET Framework tracer (Windows)",
+  "environment": [
+    "Windows Server 2022 (upgraded from 2019)",
+    "IIS-hosted .NET application",
+    "Separate Windows services (jobs) running outside IIS",
+    "Datadog Agent and .NET tracer installed"
+  ],
+  "symptom_pattern": "After a Windows Server OS upgrade, tracer data was missing. Setting COR_ENABLE_PROFILING=1 and restarting IIS restored APM traces for the IIS app. After that, separate Windows job services outside IIS no longer started, or showed as Running but could not run jobs. Uninstalling the Agent and tracer made the jobs work again.",
+  "root_cause": "COR_ENABLE_PROFILING=1 was set at machine (global) scope. The .NET runtime then tried to load the tracer into every .NET process on the host, including the job services outside IIS, which broke them. Later the variable appeared to have been set again without COR_PROFILER, leaving an inconsistent profiling state. The thread does not establish what re-applied it.",
+  "resolution_path": [
+    "On a call, found COR_ENABLE_PROFILING=1 set at machine level on the affected server",
+    "Removed it with [Environment]::SetEnvironmentVariable, after which the jobs started",
+    "Customer later reported the services showed Running but no jobs would run, with an error in the event logs",
+    "The screenshot showed COR_ENABLE_PROFILING set but COR_PROFILER not, so the removed variable had been set again",
+    "Uninstalled the .NET tracer and restarted IIS",
+    "Checked whether COR_ENABLE_PROFILING, COR_PROFILER and COR_PROFILER_PATH were set at Machine scope, and removed them if so",
+    "Restarted the job services, rebooting if necessary, and tested the jobs",
+    "Reinstalled the tracer and restarted IIS",
+    "Customer confirmed the issue was resolved"
+  ],
+  "info_needed": [
+    "Whether COR_ENABLE_PROFILING, COR_PROFILER and COR_PROFILER_PATH are set at Machine scope",
+    "Whether the issue is on the same server troubleshot during the call",
+    "Whether the event log error appears at the Windows job level or in the IIS application",
+    "Whether a group policy re-adds COR_ENABLE_PROFILING=1",
+    "Whether another profiler or APM agent is installed on the server"
+  ],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "polite, concise, collaborative",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "COR_ENABLE_PROFILING=1",
+    "[Environment]::SetEnvironmentVariable(\"COR_ENABLE_PROFILING\", $null, \"Machine\")",
+    "[Environment]::SetEnvironmentVariable(\"COR_PROFILER\", $null, \"Machine\")",
+    "[Environment]::SetEnvironmentVariable(\"COR_PROFILER_PATH\", $null, \"Machine\")",
+    "[Environment]::GetEnvironmentVariable(\"COR_ENABLE_PROFILING\",\"Machine\")",
+    "[Environment]::GetEnvironmentVariable(\"COR_PROFILER\",\"Machine\")",
+    "[Environment]::GetEnvironmentVariable(\"COR_PROFILER_PATH\",\"Machine\")"
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/tracing/trace_collection/dd_libraries/dotnet-framework/?tab=windows#:~:text=Note%3A-,The%20.NET%20runtime%20tries%20to%20load%20the%20.NET%20library%20into%20any,causes%20all%20.NET%20processes%20on%20the%20host%20to%20be%20instrumented.,-Set%20the%20following"
+  ],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer clarified the IIS-plus-job-services setup and held a live call to reproduce the issue. That call found the machine-wide COR_ENABLE_PROFILING variable. When the problem came back, they spotted the inconsistent variable state in the customer's screenshot and gave a clean-up procedure.",
+    "steps": [
+      "Scheduled a Zoom troubleshooting call during the customer's downtime window",
+      "Found the machine-level COR_ENABLE_PROFILING=1 on the call and gave the command to remove it",
+      "Sent a follow-up with the command and the relevant public doc section",
+      "Reviewed the customer's screenshot and noticed COR_PROFILER was missing while COR_ENABLE_PROFILING was set",
+      "Gave ordered steps: uninstall tracer, check and clear the three COR_ variables, restart services, reinstall tracer",
+      "Asked about group policy, a second profiler, and where the error appeared",
+      "Marked the ticket solved after the customer confirmed"
+    ],
+    "key_questions": [
+      "Is the issue on the same server troubleshot during the call?",
+      "Did the error event appear in the Windows jobs or in an IIS application?",
+      "Is a group policy adding COR_ENABLE_PROFILING=1 again?",
+      "Is any other profiler or APM agent installed?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

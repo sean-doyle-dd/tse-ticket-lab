@@ -1,0 +1,44 @@
+{
+  "id": "apm-php-rc-not-detected",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-05-27",
+  "topic": "Remote Configuration shows NOT DETECTED for PHP",
+  "product_area": "APM / Remote Configuration",
+  "environment": [
+    "PHP tracer 1.x",
+    "Agent with Remote Config enabled",
+    "Kubernetes with single step instrumentation"
+  ],
+  "symptom_pattern": "The Tracing Libraries page shows rc_status NOT DETECTED (or flapping) for PHP services even though Remote Configuration is enabled everywhere and traces flow.",
+  "root_cause": "A backend correlation issue between telemetry runtime_id and RC client registration for newer PHP tracers. It's a display problem on Datadog's side, not customer misconfiguration, and needs engineering.",
+  "resolution_path": [
+    "Verify RC enablement at every layer",
+    "Compare the flare's RC client list with tracer debug logs",
+    "Escalate with side-by-side evidence once client-side causes are ruled out"
+  ],
+  "info_needed": [
+    "flare",
+    "tracer debug logs across a restart",
+    "a healthy comparison service"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is RC working for other languages on the same Agent?",
+      "customer_answer": "Yes, our Java services show CONNECTED."
+    },
+    {
+      "tse_question": "Does the Agent flare list the PHP service as an active RC client?",
+      "customer_answer": "Looks like it, there's an entry with is_tracer true and APM_TRACING."
+    }
+  ],
+  "customer_style": {
+    "tone": "patient, thorough, already tried everything in the docs",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "high"
+  ],
+  "sandbox_hint": ""
+}

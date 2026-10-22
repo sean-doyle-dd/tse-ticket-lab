@@ -1,0 +1,43 @@
+{
+  "id": "agent-wrong-site",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-10-02",
+  "topic": "New Agent install sends nothing, API key invalid",
+  "product_area": "Agent / Forwarder",
+  "environment": [
+    "Agent 7 container",
+    "Org hosted on a non-default Datadog site"
+  ],
+  "symptom_pattern": "A freshly installed Agent never appears in the Infrastructure list. Logs repeat 'API Key invalid, dropping transaction' even though the key was just copied from the org.",
+  "root_cause": "The org lives on a different Datadog site than the Agent submits to (DD_SITE missing or wrong), so the key is validated against the wrong region and rejected.",
+  "resolution_path": [
+    "Check the forwarder/API key section of agent status",
+    "Confirm which site the org is on (URL in the browser)",
+    "Set DD_SITE to the org's site and restart"
+  ],
+  "info_needed": [
+    "agent status forwarder section",
+    "the URL they use to log in to Datadog",
+    "DD_SITE value"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What URL do you use to log into Datadog?",
+      "customer_answer": "us5.datadoghq.com, why?"
+    },
+    {
+      "tse_question": "Can you paste the Forwarder section of agent status?",
+      "customer_answer": "It says API key ending with 3f9a2: API Key invalid."
+    }
+  ],
+  "customer_style": {
+    "tone": "new to Datadog, eager, low context",
+    "technical_level": "low",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low"
+  ],
+  "sandbox_hint": "agent/dogstatsd-app"
+}

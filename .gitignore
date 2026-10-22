@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+instance/
+.pytest_cache/
+.venv/
+corpus/_staging/
+*.zip
+.render/
+.corpus-state/

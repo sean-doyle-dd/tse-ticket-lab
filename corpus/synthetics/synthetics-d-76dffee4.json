@@ -1,0 +1,84 @@
+{
+  "id": "synthetics-d-76dffee4",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-09-11",
+  "topic": "Synthetic test screenshots not displaying in the Datadog UI",
+  "product_area": "Synthetics (browser tests, test run screenshots)",
+  "environment": [
+    "Synthetic browser tests",
+    "Chrome browser (customer's usual browser)",
+    "Edge browser"
+  ],
+  "symptom_pattern": "Screenshots appear blank or missing in Synthetic test results and in 'Compare Screenshots' for every test, even though the support engineer could see the screenshots on the same test run. The browser console showed CORS errors for all the screenshot image requests, while the rest of the app loaded normally.",
+  "root_cause": "The screenshots were captured and stored correctly. The customer's Chrome had blocked the 'Local Network' permission for the site, which blocked the screenshot image requests with CORS errors. The customer had chosen 'block' on a local network access pop-up. The support engineer first suspected a network device (proxy, firewall or TLS inspection) altering the responses from Amazon S3. In Edge, the customer got the pop-up, allowed it and saw the images.",
+  "resolution_path": [
+    "Customer cleared browser cache and cookies, which did not help.",
+    "Support engineer confirmed the screenshots were visible on their side for the same test run, which showed the screenshots were being captured and stored.",
+    "Support engineer asked the customer to check in an Incognito/Private window or another browser, inspect the Network and Console tabs, and ask a colleague on the same account to check.",
+    "Customer reported CORS errors for all the screenshots in the browser.",
+    "Support engineer explained the screenshots are served as signed links from Amazon S3 and suggested a network/security team check for proxy or inspection interference.",
+    "Customer found that Chrome's site setting under Privacy and Security > Sites had 'Local Network' blocked, switched to Edge where they allowed the pop-up and saw the images, then set 'Local Network' to allow in Chrome and the screenshots displayed."
+  ],
+  "info_needed": [
+    "Whether the problem still happens after clearing browser cache and cookies",
+    "Whether the screenshots load in an Incognito/Private window or a different browser",
+    "Failing requests or errors in the browser Network and Console tabs",
+    "Whether a colleague on the same account can see the screenshots"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Are you still having the problem, and can you clear your browser cookies and cache and check again?",
+      "customer_answer": "The customer cleared the cache and cookies and still saw no images, including in 'Compare Screenshots'. It affected every test."
+    },
+    {
+      "tse_question": "Can you try an Incognito/Private window or another browser, check the Network and Console tabs for blocked or failed requests, and ask a colleague to check?",
+      "customer_answer": "The customer sent a screenshot of the console showing CORS errors for all the screenshots."
+    },
+    {
+      "tse_question": "Can you grab the full address of a failing request to send to your network team?",
+      "customer_answer": "The customer instead found the cause themselves: Chrome had blocked the 'Local Network' permission for the site."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, cooperative and concise",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Local Network"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Checked the linked test's Test Runs and saw the screenshots, then asked the customer to clear cache and cookies.",
+      "Explained that the data was stored correctly on the Datadog side, pointing to the customer's browser or network.",
+      "Gave three checks: Incognito/Private window, browser Network and Console tabs, and a colleague on the same account.",
+      "Clarified that the blank screenshots on steps marked 'do not capture screenshot' for PII are expected.",
+      "After the CORS errors were reported, explained how the screenshots are served from Amazon S3 and what a network team would need to allow.",
+      "Asked for the failing request URL to pass to the network team.",
+      "Confirmed resolution and sent the survey link."
+    ],
+    "key_questions": [
+      "Are you still having the problem, and can you clear your cache and cookies?",
+      "Do the screenshots load in an Incognito/Private window or a different browser?",
+      "Are there blocked or failed requests in the Network tab, or errors in the Console?",
+      "Can a colleague on the same account see the screenshots?"
+    ],
+    "communication": [
+      "Gave numbered steps for each check and explained why each was needed. Described the CORS error in plain terms and said what the network team would need to do. Separated the expected PII-step blank screenshots from the wider issue."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

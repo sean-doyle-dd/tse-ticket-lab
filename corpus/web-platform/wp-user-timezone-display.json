@@ -1,0 +1,43 @@
+{
+  "id": "wp-user-timezone-display",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-09-09",
+  "topic": "Dashboards and graphs show times in the wrong timezone",
+  "product_area": "Web Platform / User preferences",
+  "environment": [
+    "Global team",
+    "Dashboards with time-based widgets"
+  ],
+  "symptom_pattern": "A user says all graph timestamps are hours off compared to their local time, while a colleague sees the correct times on the same dashboard.",
+  "root_cause": "The user's profile timezone preference is set to a different timezone (e.g. UTC) instead of browser default.",
+  "resolution_path": [
+    "Ask for a screenshot of the time axis and their local time",
+    "Check the user's Preferences timezone setting",
+    "Set it to browser default or the desired zone"
+  ],
+  "info_needed": [
+    "user preferences",
+    "browser timezone",
+    "example widget"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is the colleague in the same timezone as you?",
+      "customer_answer": "Yes, we're in the same office."
+    },
+    {
+      "tse_question": "Can you check Personal Settings > Preferences > Time zone?",
+      "customer_answer": "It says UTC. I don't remember setting that."
+    }
+  ],
+  "customer_style": {
+    "tone": "friendly, low technical depth",
+    "technical_level": "low",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low"
+  ],
+  "sandbox_hint": ""
+}

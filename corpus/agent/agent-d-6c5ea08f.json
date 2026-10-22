@@ -1,0 +1,86 @@
+{
+  "id": "agent-d-6c5ea08f",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-08-12",
+  "topic": "Agent exhausting Windows ephemeral ports via persistent connections to security_agent.cmd_port default (5010) occupied by WMI",
+  "product_area": "Agent / Security Agent / Windows networking",
+  "environment": [
+    "Windows Server 2019",
+    "Agent 7.78.3",
+    "SQL Server with Database Monitoring (DBM)"
+  ],
+  "symptom_pattern": "Host intermittently drops data with large reporting gaps. Agent logs show WSAENOBUFS/10055 and TCP-connection-error against SQL Server DBM. agent.exe accumulates thousands of established connections to a local loopback port, exhausting the ephemeral port range. Restarting the Agent temporarily clears the connections.",
+  "root_cause": "The Agent's security_agent.cmd_port defaults to 5010, which on this Windows host was occupied by the WMI service (Winmgmt, hosted in svchost.exe). The core Agent kept trying to reach the Security Agent on that port roughly every 10 minutes, and the connections never released. They accumulated until the ephemeral port range was exhausted.",
+  "resolution_path": [
+    "Collected Get-NetTCPConnection output, timestamped snapshots and a flare, which confirmed a steady leak of about 2 new persistent connections to ::1:5010 every 5 minutes",
+    "Identified that port 5010 was owned by the WMI service, not the Agent",
+    "Tried setting inventories_configuration_enabled: false as a first mitigation, which sharply reduced connection growth but did not stop it",
+    "Set security_agent.cmd_port as a top-level key in datadog.yaml to a verified-free port outside the exclusion ranges (not 5010, 5011, 5022 or 5023), then restarted the Agent",
+    "Verified with about 12 timestamped snapshots over roughly 56 minutes that no established connections to the old port or the new port were present, confirming the fix"
+  ],
+  "info_needed": [
+    "Get-NetTCPConnection output with timestamped snapshots",
+    "Agent flare, including a DEBUG flare",
+    "Connection count immediately after restart and at +10/+20/+30 minutes",
+    "Confirmation that the chosen port is free and not within the Windows exclusion ranges"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share Get-NetTCPConnection output, a fresh flare and timestamped snapshots?",
+      "customer_answer": "The customer provided the connection output and flare, which showed the steady connection leak."
+    },
+    {
+      "tse_question": "Can you set security_agent.cmd_port to a free port at the top level of datadog.yaml and share the connection counts after restart?",
+      "customer_answer": "The customer could not initially find the setting in datadog.yaml. After clarification they added it with a free port that was outside the exclusion ranges, restarted, and shared snapshots showing about 12 connections."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, cooperative and collaborative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "security_agent:",
+    " cmd_port: <free port> ",
+    "inventories_configuration_enabled: false",
+    "log_level: DEBUG",
+    "FAIL clc_runner_port",
+    " Diagnosis: Required port 5005 is already used by 'spoolsv' process (PID=3864) for tcp."
+  ],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/troubleshooting/send_a_flare/?tab=agentv6v7#send-a-flare-from-the-agent-command-lin"
+  ],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer collected timestamped connection snapshots and flares to confirm a steady connection leak. They traced it to a default Agent port colliding with a Windows service, then guided the customer to override the port and verified the result with follow-up snapshots.",
+    "steps": [
+      "Requested Get-NetTCPConnection output, a fresh flare and timestamped snapshots",
+      "Confirmed the leak pattern from the snapshots and escalated to engineering",
+      "Identified the port collision as the root cause",
+      "Suggested inventories_configuration_enabled: false as a first mitigation",
+      "Recommended moving security_agent.cmd_port to a verified-free port and explained where to add it in datadog.yaml",
+      "Asked for a DEBUG flare and connection counts after restart to validate the change",
+      "Reviewed the snapshots over about 56 minutes and confirmed the issue was resolved",
+      "Pointed out other Agent ports that conflict with services on the host"
+    ],
+    "key_questions": [
+      "Share Get-NetTCPConnection output with timestamped snapshots and a flare",
+      "Share the connection count immediately after restart and at +10/+20/+30 minutes",
+      "Run a DEBUG flare test with two restarts and share the connection count"
+    ],
+    "communication": [
+      "Explained that security_agent.cmd_port is a top-level key that is not surfaced in the config template, gave a concrete YAML example, defined what a healthy result looks like (flat 0, no growth), gave numbered steps for the DEBUG flare test with the reason for the second restart, and pointed out other port conflicts for future planning."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

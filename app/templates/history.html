@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}History · TSE Ticket Lab{% endblock %}
+{% block content %}
+<section class="hero"><h1>Your practice history</h1></section>
+{% if stats %}
+<div class="stat-row">
+  {% for spec, st in stats.items() %}
+  <div class="stat"><span class="stat-label">{{ SPECS.get(spec, {}).get('label', spec) }}</span><span class="stat-value">{{ st.avg }}</span><span class="stat-sub">avg over {{ st.graded }} graded</span></div>
+  {% endfor %}
+</div>
+{% endif %}
+<section class="panel">
+  {% if rows %}{% include "_ticket_table.html" %}{% else %}<p class="muted">No tickets yet. <a href="{{ url_for('ui.index') }}">Generate your first one.</a></p>{% endif %}
+</section>
+{% endblock %}

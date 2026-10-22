@@ -1,0 +1,60 @@
+{
+  "id": "synthetics-d-993af09b",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-09-03",
+  "topic": "Using different Synthetic test frequencies on weekdays and weekends to reduce cost",
+  "product_area": "Synthetic Monitoring",
+  "environment": [],
+  "symptom_pattern": "Customer wants a URL check to run as often as possible during the working day, but only every 10 minutes on weekends and out-of-office periods to reduce cost. They ask whether one Synthetic test can do this.",
+  "root_cause": "This is a product limitation, not a fault. A single Synthetic test has one fixed execution frequency, so it can't vary by day of the week.",
+  "resolution_path": [
+    "Confirmed a single Synthetic test cannot use different frequencies by day of week.",
+    "Suggested creating two otherwise identical tests: a higher-frequency weekday test active Monday\u2013Friday and a lower-frequency weekend test active Saturday\u2013Sunday.",
+    "Said the setup could reduce cost because it means fewer total executions."
+  ],
+  "info_needed": [],
+  "qa_pairs": [
+    {
+      "tse_question": "Asked whether there was anything else they could help with.",
+      "customer_answer": "The customer asked whether the two-test setup would reduce cost."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and concise",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "A single Datadog Synthetic test has one fixed execution frequency",
+    "Weekday test: Higher frequency, active Monday\u2013Friday.",
+    "Weekend test: Lower frequency, active Saturday\u2013Sunday."
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer answered a how-to question in chat. They first said it was probably not possible, then confirmed after a follow-up that one test has a single fixed frequency. They offered a two-test workaround and said it could reduce cost.",
+    "steps": [
+      "Gave an initial answer that this likely isn't possible and two tests might be needed.",
+      "Confirmed that a single test has one fixed execution frequency when the customer asked again.",
+      "Described the workaround of two otherwise identical tests with weekday and weekend schedules.",
+      "Answered the cost follow-up by saying savings would come from fewer total executions."
+    ],
+    "key_questions": [
+      "Asked whether there was anything else they could help with, which led to the cost question."
+    ],
+    "communication": [
+      "Gave short, direct answers. Presented the workaround as a bulleted list contrasting the weekday and weekend tests. Hedged the cost answer with 'potentially'."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-09"
+  }
+}

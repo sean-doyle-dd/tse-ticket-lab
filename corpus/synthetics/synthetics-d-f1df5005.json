@@ -1,0 +1,84 @@
+{
+  "id": "synthetics-d-f1df5005",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-10-05",
+  "topic": "Synthetics API test with JavaScript assertion fails on Windows private locations with 'Unknown assertion error'",
+  "product_area": "Synthetics API tests / Private Locations (Windows)",
+  "environment": [
+    "Windows private locations",
+    "Private Location versions 1.64/1.66 (mixed)",
+    "Synthetics HTTP API test (POST) with JavaScript assertion",
+    "Private (internal) URL and public URL tests"
+  ],
+  "symptom_pattern": "An API test with a JavaScript assertion passes from managed locations but fails from Windows private locations. The HTTP request completes with a full response, then the test fails at assertion evaluation with a generic 'Unknown assertion error' (type javascript). The AI-suggested failure reason pointed to a script bug (JS_SCRIPT_RUNNER), but the assertion was a plain status code check.",
+  "root_cause": "The JavaScript assertion runner on the older Windows private location versions (1.64/1.66) raised an unclassified error that surfaced as the generic 'Unknown assertion error'. The thread says these versions lack several later JS-assertion fixes for Windows. The thread does not confirm the exact underlying error. The failure was not a connectivity problem and not a bug in the customer's script. The test passed once the JavaScript assertion was replaced with the built-in status code assertion.",
+  "resolution_path": [
+    "Confirmed private location setup (Windows, not containers) and versions in use (1.64/1.66)",
+    "Collected private location service logs for the failing day",
+    "Logs showed DNS resolved internally and the full HTTP response completed, with failure only at JavaScript assertion evaluation",
+    "Replaced the JavaScript assertion with the built-in status code assertion (Assertions \u2192 status code \u2192 is \u2192 200)",
+    "Test passed with the native assertion and the customer asked to close the ticket"
+  ],
+  "info_needed": [
+    "How private locations are deployed (containers vs Windows)",
+    "Private location versions in use",
+    "Private location service logs (private-location-service.out) for the failing period",
+    "Result of re-running with the built-in status code assertion",
+    "Result of upgrading one private location to the latest version (requested, outcome not reported)"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "How are your private locations set up (containers or Windows), and is there a reason for pinning versions 1.64/1.66?",
+      "customer_answer": "All are on Windows, none on containers, and there was no specific reason for the mixed versions. They asked which version is recommended."
+    },
+    {
+      "tse_question": "Can you temporarily swap the JavaScript assertion for the built-in status code assertion and re-run?",
+      "customer_answer": "They made the swap and the test worked, then asked to close the ticket."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, slightly puzzled about why private locations failed",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "synthetics/private-location",
+  "evidence": [
+    "Unknown assertion error",
+    "[{\"errorMessage\":\"Unknown assertion error\",\"type\":\"javascript\"}]",
+    "JS_SCRIPT_RUNNER",
+    "private-location-service.out",
+    "dd.expect(dd.response.statusCode).to.equal(200);",
+    "INCORRECT_ASSERTION",
+    "Assertions \u2192 status code \u2192 is \u2192 200"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Asked how the private locations were deployed and which versions they ran",
+      "Asked for the private location service log file, then narrowed the request to the failing date",
+      "Analyzed the logs and showed the request completed, with failure only at assertion evaluation",
+      "Recommended upgrading one private location to the latest version and re-running",
+      "Asked the customer to swap the JavaScript assertion for the built-in status code assertion to expose the real result"
+    ],
+    "key_questions": [
+      "How are the private locations set up, and why those versions?",
+      "Can you share the private location service log for the failing day?",
+      "Can you replace the JavaScript assertion with the built-in status code assertion and re-run?"
+    ],
+    "communication": [
+      "Named the exact log file and its default Windows location, narrowed the log request to one day when the file was large, quoted the relevant log lines, explained that the failure happened after a successful response, and gave two clearly separated actions to try so each outcome narrows the next step."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

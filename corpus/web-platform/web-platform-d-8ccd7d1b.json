@@ -1,0 +1,80 @@
+{
+  "id": "web-platform-d-8ccd7d1b",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-19",
+  "topic": "Disable and delete an expired trial organization",
+  "product_area": "Account management / organization disable and data deletion",
+  "environment": [
+    "Datadog trial organization (expired)",
+    "US5 region"
+  ],
+  "symptom_pattern": "Customer with an expired trial who does not want to upgrade asks for permanent deletion of their organization and associated data, including personal data and credentials. The ticket was auto-flagged as potentially spam.",
+  "root_cause": "Not a fault. This was an account lifecycle request: the trial had expired and the customer did not want a paid plan. The customer could not access the dashboard to mute active monitors.",
+  "resolution_path": [
+    "Confirmed the requester was the org admin and that the org was a trial, so CSM approval was not required",
+    "Checked the org for active monitors and active hosts (monitors were active, no hosts were active)",
+    "Asked the customer to confirm which org to disable and to mute active monitors and disable reporting hosts first",
+    "Customer confirmed no hosts were reporting and said they could not access the dashboard to mute monitors, then authorized proceeding",
+    "Ran the SupportDog disable account workflow, which completed successfully",
+    "Told the customer the org was disabled: API keys revoked, telemetry no longer ingested, all users removed",
+    "Tracked the full data deletion separately and told the customer they would be updated when it completed"
+  ],
+  "info_needed": [
+    "Confirmation of the exact organization to disable",
+    "Whether any monitors are still active in the org",
+    "Whether any hosts are still reporting to the org",
+    "Confirmation that the requester is the org admin"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Please confirm that you want to disable the organization named in the request.",
+      "customer_answer": "Confirmed, and asked for the organization and all associated account data to be disabled and completely deleted."
+    },
+    {
+      "tse_question": "Are there any active monitors in the org? If so, please mute or disable them.",
+      "customer_answer": "They could not access the dashboard to mute monitors because the trial had expired."
+    },
+    {
+      "tse_question": "Are any hosts still reporting to the org? If so, please disable them.",
+      "customer_answer": "No active hosts were reporting to the organization."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and formal",
+    "technical_level": "low",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer checked the requester's admin status, trial status, and monitor and host activity. They then asked the customer to confirm the org and the pre-disable checks, ran the disable workflow, and reported what the disable did.",
+    "steps": [
+      "Reviewed the org and recorded that the requester was the org admin, monitors were active, no hosts were active, and CSM approval was not needed for a trial",
+      "Asked the customer to confirm the org and to mute active monitors and disable active hosts before the disable",
+      "Acknowledged the customer's confirmation and said they would proceed",
+      "Ran the SupportDog disable account workflow",
+      "Told the customer what the disable did and that data deletion would be tracked separately",
+      "Wrote an internal summary of the customer issue, impact and investigation"
+    ],
+    "key_questions": [
+      "Please confirm that you want to disable the named organization.",
+      "Are there any active monitors in the org?",
+      "Are any active hosts still reporting to the org?"
+    ],
+    "communication": [
+      "Explained why the pre-checks mattered: after the disable the customer can't access the org and might keep getting alert emails. Listed what the disable did (API keys revoked, no new telemetry, users removed) and said data deletion would follow separately."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

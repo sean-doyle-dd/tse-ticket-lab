@@ -1,0 +1,44 @@
+{
+  "id": "apm-receiver-non-local",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-09-18",
+  "topic": "No traces from any service, infra metrics fine",
+  "product_area": "APM / Agent receiver",
+  "environment": [
+    "Agent 7 container",
+    "Several instrumented services in other containers"
+  ],
+  "symptom_pattern": "After an Agent configuration change, no traces arrive from any service, while host and container metrics from the same Agent look normal.",
+  "root_cause": "DD_APM_NON_LOCAL_TRAFFIC was set to false, so the trace-agent only accepts connections from localhost and every app container is refused.",
+  "resolution_path": [
+    "Check agent status APM section (receiver stats empty)",
+    "Look at tracer errors (connection refused to the Agent)",
+    "Re-enable non-local traffic for APM"
+  ],
+  "info_needed": [
+    "agent status APM section",
+    "Agent env vars",
+    "tracer logs from one service"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What does the APM section of agent status show?",
+      "customer_answer": "Receiver (previous minute): no traces received."
+    },
+    {
+      "tse_question": "Which Agent settings changed?",
+      "customer_answer": "We merged a 'secure defaults' env file into the Agent; it has a bunch of *_NON_LOCAL_TRAFFIC=false lines."
+    }
+  ],
+  "customer_style": {
+    "tone": "technical lead, structured, expects a root cause",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

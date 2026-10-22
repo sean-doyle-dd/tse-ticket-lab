@@ -1,0 +1,105 @@
+{
+  "id": "apm-d-99d8ed3c",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-09-02",
+  "topic": "Most Celery task traces (trace.celery.run) missing in APM for one service while a similar service is unaffected",
+  "product_area": "APM / Python tracing (ddtrace, Celery integration)",
+  "environment": [
+    "Python 3.12 and 3.13 (alpine)",
+    "ddtrace 3.9.4, 4.1.0, 4.5.0 and 4.12.2 tried",
+    "Celery 5.5.3 and 5.6.2",
+    "Kubernetes",
+    "Celery prefork worker started with ddtrace-run and autoscale",
+    "Manual @tracer.wrap() on each task function, DD_CELERY_DISTRIBUTED_TRACING enabled"
+  ],
+  "symptom_pattern": "Since about March, only 2 long-running tasks (1-2 hours) out of ~16 Celery tasks produced celery.run traces. The sub-second and short tasks produced no traces, although they ran successfully and their logs appeared. A second service with the same code, instrumentation and library versions traced everything. Rolling back to an older app version, changing Python versions and changing ddtrace/Celery versions did not help.",
+  "root_cause": "The worker was configured with worker_max_memory_per_child=100000 (KiB, about 98 MB). When a child process exceeded that limit, Celery replaced it via os._exit(), which skips ddtrace's flush and drops buffered spans. The comparison service had the limit at 200000, so it was not affected. The regression timing was consistent with per-task memory growing past the threshold. The ddtrace import-order fix was good practice but was likely not the root cause.",
+  "resolution_path": [
+    "Support escalated to APM Python engineering, who tested the customer's exact worker config.",
+    "Support asked for the worker command, the max-tasks/max-memory-per-child settings, pod restart frequency and the reason for recycling workers.",
+    "Engineering confirmed that children exceeding the memory limit are recycled via os._exit(), which drops buffered spans.",
+    "The customer compared the two services and found the unaffected service used worker_max_memory_per_child of 200000 instead of 100000.",
+    "The customer raised worker_max_memory_per_child to 200000 on the affected service and also moved the ddtrace patch_all import above the celery import in one script.",
+    "All traces then appeared again, and support confirmed the memory limit change was almost certainly the decisive fix."
+  ],
+  "info_needed": [
+    "Exact Celery worker command",
+    "Whether max-tasks-per-child or max-memory-per-child is set, and the values",
+    "How often Kubernetes restarts or kills worker pods",
+    "Why workers are recycled",
+    "Typical memory use per task on each service",
+    "Traffic pattern (bursty vs steady) on each service"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What is the exact Celery worker command used in production?",
+      "customer_answer": "ddtrace-run celery with autoscale of 8,0 and a debug log level."
+    },
+    {
+      "tse_question": "Do you set max-tasks-per-child or max-memory-per-child, and with what values?",
+      "customer_answer": "Only worker_max_memory_per_child was set, at 100000, along with a prefetch multiplier of 1. No max-tasks-per-child was set."
+    },
+    {
+      "tse_question": "How often does Kubernetes restart or kill the worker pods?",
+      "customer_answer": "Not sure, but they think the pods restart every morning at a fixed time."
+    },
+    {
+      "tse_question": "How much memory does a typical task use on each service, and what is the traffic pattern?",
+      "customer_answer": "Per-task memory was not available. Service-level memory was higher on the unaffected service. The unaffected service uses a memory limit of 200000. Task schedules were described: the affected service runs one instance of each task at a time, hourly or more often for the short ones."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, detailed and methodical",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "ddtrace-run celery -A celery_app worker",
+    "--autoscale=8,0",
+    "worker_prefetch_multiplier = 1",
+    "worker_max_memory_per_child = 100000",
+    "worker_max_tasks_per_child",
+    "--max-tasks-per-child",
+    "worker_hijack_root_logger = True",
+    "DD_CELERY_DISTRIBUTED_TRACING=true",
+    "DD_TRACE_DEBUG=true",
+    "DD_TRACE_SAMPLE_RATE=1.0",
+    "@tracer.wrap()",
+    "from ddtrace import patch_all",
+    "os._exit()",
+    "trace.celery.run"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer acknowledged the detailed report, escalated to APM Python engineering, then relayed engineering's targeted questions about worker recycling. After engineering reproduced the problem with the customer's config, the engineer explained the mechanism and asked comparison questions across the two services.",
+    "steps": [
+      "Acknowledged the report and began internal investigation",
+      "Escalated to APM Python engineering",
+      "Asked for the worker command, memory and task recycling settings, pod restart frequency and the reason for recycling",
+      "Relayed engineering's reproduction using the customer's exact config and the confirmed trigger",
+      "Asked for per-task memory, per-service memory and traffic patterns to confirm against both services",
+      "After the customer's fix, confirmed the memory limit increase as the likely decisive change and noted the import-order change as good practice",
+      "Closed the ticket, inviting the customer to reopen if the issue returned"
+    ],
+    "key_questions": [
+      "Do you set --max-tasks-per-child or --max-memory-per-child (or the config equivalents), and with what values?",
+      "What is the exact Celery worker command?",
+      "How much memory does a typical task use on each service, and is the traffic bursty or steady?"
+    ],
+    "communication": [
+      "Explained the mechanism (child recycling skips the ddtrace flush) and why the unaffected service was fine. Clarified the unit of the memory setting (KiB). Separated the decisive fix from the secondary good-practice change. Kept the customer updated while engineering worked."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-09"
+  }
+}

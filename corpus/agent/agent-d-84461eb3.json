@@ -1,0 +1,80 @@
+{
+  "id": "agent-d-84461eb3",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-09-08",
+  "topic": "Network Topology map tag conflict from duplicate 'location' tag in NDM device tags and Agent yaml config",
+  "product_area": "Network Device Monitoring (NDM) / Network Topology map",
+  "environment": [
+    "Tags defined in the Agent yaml config file in addition to NDM device tags"
+  ],
+  "symptom_pattern": "Network Topology map shows incorrect device location values. Devices carry a 'location' tag from NDM device data and a different 'location' tag from the Agent yaml config, and no alert or warning is raised about the duplicate tag key. The customer also wanted custom colors per tag group (Location/Area/Site), as all areas show grey. That request was split into a separate ticket.",
+  "root_cause": "The same tag key, 'location', was set in two places: by NDM device tagging and by tags in the Agent yaml config file. The duplicate key made the location shown on the map wrong. Datadog gave no warning about the duplicate.",
+  "resolution_path": [
+    "Customer found they had two tag sources: NDM device tags and tags in the Agent yaml config file",
+    "Customer renamed the yaml config tag from 'location' to 'loc' so it no longer collided with the NDM device 'location' tag",
+    "Customer confirmed the issue was solved and asked for the ticket to be closed"
+  ],
+  "info_needed": [
+    "Which feature 'device_terms' refers to, with a screenshot",
+    "Where exactly the location mismatch appears, with an example and the expected result",
+    "Where the 'location:xxx' and 'location:Townsite' tags are defined",
+    "Debug-level Agent flare from the host where the tags are set"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which feature does 'device_terms for default tagging from devices' refer to? Can you share a screenshot?",
+      "customer_answer": "There are two tag sources: tags on the NDM device and tags in the Agent yaml config file. Both use the key 'location', and nothing alerts about the duplicate. Other NDM-derived tags use a device_ prefix."
+    },
+    {
+      "tse_question": "Where exactly is the mistake, and what is the expected correct result?",
+      "customer_answer": "The mistake came from the duplicate 'location' tag, and renaming the yaml config tag to 'loc' fixed it."
+    },
+    {
+      "tse_question": "Where are the 'location' tags defined?",
+      "customer_answer": "One is set on the NDM device and the other in the Agent yaml config file."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite but vague at first, later concise and clear",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "sandbox_hint": "",
+  "evidence": [],
+  "doc_links": [
+    "https://docs.datadoghq.com/agent/troubleshooting/debug_mode/?tab=agentv6v7#agent",
+    "https://docs.datadoghq.com/agent/troubleshooting/send_a_flare/?tab=agentv6v7",
+    "https://docs.datadoghq.com/agent/fleet_automation/#send-a-remote-flare"
+  ],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer could not follow the vague request, so they asked for clarification and screenshots and requested a debug flare. They split the second request into its own ticket. The customer found the duplicate tag key themselves, and the engineer confirmed the fix before closing.",
+    "steps": [
+      "Reserved this ticket for the first request and opened a separate ticket for the coloring request",
+      "Asked the customer to clarify each unclear statement, with screenshots and examples",
+      "Requested a debug flare, with steps to enable debug logging and send the flare",
+      "Followed up when the customer re-sent the same screenshot, asking again for the missing details",
+      "Asked the customer to confirm the fix and offered a call if they still needed help",
+      "Closed the ticket after the customer confirmed"
+    ],
+    "key_questions": [
+      "Which feature are you referring to, and can you share a screenshot?",
+      "Where exactly is the mistake, and what is the expected correct result?",
+      "Where are the 'location' tags defined?",
+      "Are you happy with the fix so we can close the ticket?"
+    ],
+    "communication": [
+      "Quoted the customer's own statements and put a specific question under each one. Gave lettered flare steps with doc links and a note on containerized environments. Offered a call if the customer was still blocked. Confirmed the fix before closing."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

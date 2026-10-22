@@ -1,0 +1,44 @@
+{
+  "id": "agent-openmetrics-untyped-auth",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-08-11",
+  "topic": "Some OpenMetrics metrics missing from custom exporter",
+  "product_area": "Agent / OpenMetrics integration",
+  "environment": [
+    "Agent 7 OpenMetrics v2 check",
+    "In-house exporter behind basic auth"
+  ],
+  "symptom_pattern": "An OpenMetrics check against an in-house exporter collects some metrics but one business metric never shows up; earlier the check also failed with 401 until a password was 'fixed'.",
+  "root_cause": "The missing metric is exposed with TYPE untyped, which the OpenMetrics check doesn't submit unless it's mapped with an explicit type override. The earlier 401 was a wrong basic-auth password.",
+  "resolution_path": [
+    "Run agent check openmetrics and compare with the exporter's /metrics output",
+    "Look at the # TYPE line for the missing metric",
+    "Add a metrics mapping with type: gauge for it"
+  ],
+  "info_needed": [
+    "exporter /metrics sample",
+    "conf.yaml for the check",
+    "agent check output"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the raw /metrics output for the missing metric?",
+      "customer_answer": "# TYPE cart_total_value untyped then cart_total_value 350.45"
+    },
+    {
+      "tse_question": "What does agent check openmetrics return?",
+      "customer_answer": "It runs OK and lists items_added_to_customer_cart, but no cart_total_value."
+    }
+  ],
+  "customer_style": {
+    "tone": "methodical, has read the docs, wants a precise explanation",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "agent/proxy-openmetrics"
+}

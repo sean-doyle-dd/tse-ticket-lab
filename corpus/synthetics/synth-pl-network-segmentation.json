@@ -1,0 +1,44 @@
+{
+  "id": "synth-pl-network-segmentation",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-10-07",
+  "topic": "Private location reports healthy but tests to internal app time out",
+  "product_area": "Synthetics / Private locations",
+  "environment": [
+    "Private location worker in its own subnet/VLAN",
+    "Internal app in another network"
+  ],
+  "symptom_pattern": "The private location shows as up in Datadog but tests to an internal application time out or fail DNS. Tests to public sites from the same location pass.",
+  "root_cause": "The worker runs in a network segment with no route (or no DNS view) to the application network, so egress to Datadog works while internal targets are unreachable.",
+  "resolution_path": [
+    "Distinguish worker health (talks to Datadog) from target reachability",
+    "Test reachability from the worker's network/container",
+    "Place the worker where it can reach the targets or open the route"
+  ],
+  "info_needed": [
+    "where the worker runs",
+    "results from public vs internal tests",
+    "a connectivity test from the worker container"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you run curl to the target from inside the worker container?",
+      "customer_answer": "It hangs and then times out."
+    },
+    {
+      "tse_question": "Which network is the worker attached to?",
+      "customer_answer": "Our DMZ network; the app is on the internal one."
+    }
+  ],
+  "customer_style": {
+    "tone": "ops engineer, cooperative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "synthetics/private-location"
+}

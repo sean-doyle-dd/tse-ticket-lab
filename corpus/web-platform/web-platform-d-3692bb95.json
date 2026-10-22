@@ -1,0 +1,59 @@
+{
+  "id": "web-platform-d-3692bb95",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-08-24",
+  "topic": "Enabling and creating a multi-organization (parent/child) setup",
+  "product_area": "Account management / Multi-organization",
+  "environment": [],
+  "symptom_pattern": "Customer wants a parent organization with child organizations to separate environments or business units under centralized management. A self-service assistant told them the multi-org feature needed internal enablement and sent them to live chat.",
+  "root_cause": "No fault. The customer's account could already create child organizations. When the support engineer had them open the new organization page, the customer confirmed it allowed them to create a new child organization, so no support-side enablement was needed.",
+  "resolution_path": [
+    "The support engineer asked the customer to open the new organization page in the Datadog app and report whether it let them create a new child organization.",
+    "The customer confirmed that it did.",
+    "The support engineer told the customer to use that page to set up the new child organization."
+  ],
+  "info_needed": [
+    "Whether the account's new organization page allows creating a child organization"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you open the new organization page and tell me whether it lets you create a new child organization?",
+      "customer_answer": "Yes, the page allows creating a child organization."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and formal",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Account settings, such as allow-listed IP addresses, are not inherited by child-organizations",
+    "SAML setup is not inherited \u2014 it must be configured for each child-organization individually"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Greeted the customer and asked how they could help.",
+      "Took a moment to review the request.",
+      "Asked the customer to open the new organization page and say whether it let them create a child organization.",
+      "Confirmed with the customer that it did, then directed them to use that page to set up the child org."
+    ],
+    "key_questions": [
+      "Could you navigate to the new organization page and let me know if it enables you to create a new child organization?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-08"
+  }
+}

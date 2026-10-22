@@ -1,0 +1,44 @@
+{
+  "id": "agent-dogstatsd-client-localhost",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-09-22",
+  "topic": "Custom metrics missing after containerising an app",
+  "product_area": "Agent / DogStatsD",
+  "environment": [
+    "Agent 7 running as a container (docker compose or ECS)",
+    "Python or Node app using a DogStatsD client"
+  ],
+  "symptom_pattern": "After moving an application into a container, its custom metrics stopped appearing. Agent metrics (system.*) still arrive and the Agent looks healthy.",
+  "root_cause": "The DogStatsD client is still configured to send to localhost/127.0.0.1, which inside the app container is the app itself, not the Agent. UDP is fire-and-forget, so no error is raised.",
+  "resolution_path": [
+    "Confirm agent status shows DogStatsD with zero or low Metric Packets",
+    "Check the client host/port config in the app",
+    "Point the client at the Agent service name (or the host IP / DD_AGENT_HOST) and make sure the Agent accepts non-local traffic"
+  ],
+  "info_needed": [
+    "agent status DogStatsD section",
+    "how the client is initialised (host/port)",
+    "deployment topology (sidecar vs separate container)"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share how your app initialises the statsd client?",
+      "customer_answer": "We just call initialize() with the defaults, so statsd_host is 127.0.0.1 I think. It worked on the VM."
+    },
+    {
+      "tse_question": "Can you run agent status and paste the DogStatsD section?",
+      "customer_answer": "Metric Packets: 0, Metric Parse Errors: 0. Is that bad?"
+    }
+  ],
+  "customer_style": {
+    "tone": "polite but confused, assumes Datadog changed something",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "agent/dogstatsd-app"
+}

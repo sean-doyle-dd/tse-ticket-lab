@@ -1,0 +1,43 @@
+{
+  "id": "synth-pl-dns-internal",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-09-24",
+  "topic": "Private location can't resolve internal hostnames",
+  "product_area": "Synthetics / Private locations",
+  "environment": [
+    "Private location worker in Docker",
+    "Internal services with private DNS names"
+  ],
+  "symptom_pattern": "API tests against internal services fail from the private location with a DNS error (ENOTFOUND), while curl from the same host resolves the name fine.",
+  "root_cause": "The worker is configured to skip the host resolver (dnsUseHost false) and only query public DNS servers, which don't know internal names.",
+  "resolution_path": [
+    "Check the test result's error type (DNS)",
+    "Review dnsUseHost / dnsServer in the worker config",
+    "Use the host resolver or add the internal DNS server to dnsServer"
+  ],
+  "info_needed": [
+    "test result error details",
+    "worker config JSON (minus keys)",
+    "how the host resolves the name"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the worker config, with the keys removed?",
+      "customer_answer": "It has dnsUseHost: false and dnsServer [8.8.8.8, 1.1.1.1]; the network team wanted no dependency on the host."
+    },
+    {
+      "tse_question": "Does nslookup of the target work from the host?",
+      "customer_answer": "Yes, it resolves to a 10.x address."
+    }
+  ],
+  "customer_style": {
+    "tone": "network engineer, confident the problem is in Datadog",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": "synthetics/private-location"
+}

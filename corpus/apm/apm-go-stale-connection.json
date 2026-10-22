@@ -1,0 +1,44 @@
+{
+  "id": "apm-go-stale-connection",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-09-10",
+  "topic": "Go tracer 'lost traces' after major upgrade",
+  "product_area": "APM / Go tracer",
+  "environment": [
+    "Go services on Kubernetes",
+    "Tracer upgraded across a major version",
+    "Agent 7.6x"
+  ],
+  "symptom_pattern": "After upgrading the Go tracing library to a new major version, apps intermittently log 'lost N traces' and 'Error sending stats payload: connection reset by peer'; trace-agent logs show i/o timeouts.",
+  "root_cause": "The tracer keeps idle keep-alive connections for 90s while older Agents close idle connections after 5s; reusing a closed connection loses the payload. Fixed in a later tracer minor; a newer Agent with a longer idle timeout mitigates.",
+  "resolution_path": [
+    "Correlate errors with the upgrade and gather tracer and Agent versions",
+    "Collect a flare and tracer debug logs",
+    "Upgrade to the fixed tracer minor, or upgrade the Agent as a mitigation; involve APM engineering if unclear"
+  ],
+  "info_needed": [
+    "exact tracer and Agent versions",
+    "flare",
+    "frequency and timing of the errors"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which exact tracer and Agent versions are running?",
+      "customer_answer": "Tracer v2.0.x on all services; Agent is 7.6-something, we haven't upgraded it this year."
+    },
+    {
+      "tse_question": "Are you seeing CPU or memory throttling on the Agent pods?",
+      "customer_answer": "No, they're well under limits."
+    }
+  ],
+  "customer_style": {
+    "tone": "senior SRE, precise, expects engineering-level depth",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "high"
+  ],
+  "sandbox_hint": ""
+}

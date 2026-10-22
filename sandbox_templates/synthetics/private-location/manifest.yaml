@@ -1,0 +1,36 @@
+id: synthetics/private-location
+title: Private location worker testing an internal API
+description: >
+  A Synthetics private location worker (you supply the config JSON from your sandbox org)
+  and an internal-only HTTP API it should be able to test (http://internal-api:8080/health and
+  /api/orders). Worker settings are layered on top of your config from config/overrides.json
+  at startup. Good for "test passes from managed locations but fails from our private location",
+  DNS resolution (ENOTFOUND), blocked reserved IP ranges, network segmentation and
+  timeout tickets.
+services: [pl-worker, internal-api, config-merge]
+editable: [config/overrides.json, docker-compose.yml]
+params:
+  BLOCK_RESERVED_RANGES:
+    description: Worker enableDefaultBlockedIpRanges (in overrides.json)
+    default: "false"
+    choices:
+      "false": healthy
+      "true": "broken: the worker refuses to connect to reserved/private IPs, so tests to internal-api fail with a blocked-IP error even though DNS resolves"
+  DNS_MODE:
+    description: Worker DNS settings (dnsUseHost / dnsServer in overrides.json)
+    default: host
+    choices:
+      host: healthy, uses the container's resolver (Docker DNS) first
+      public_only: "broken: dnsUseHost false with only public resolvers, so internal-api can't be resolved (ENOTFOUND / DNS error)"
+  WORKER_NETWORK:
+    description: Which Docker network the worker joins
+    default: shared
+    choices:
+      shared: healthy, on the same network as internal-api
+      isolated: "broken: worker on a separate network with no route to internal-api (DNS failure / timeouts), much like a firewall/VPC segmentation issue"
+  TARGET_DELAY_SECONDS:
+    description: Artificial latency on internal-api /api/orders
+    default: "0"
+    choices:
+      "0": healthy
+      "65": "broken: /api/orders takes 65s, beyond the test timeout, so the test fails with a timeout; /health is fine"

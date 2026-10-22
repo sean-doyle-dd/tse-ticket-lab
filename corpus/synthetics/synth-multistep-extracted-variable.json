@@ -1,0 +1,44 @@
+{
+  "id": "synth-multistep-extracted-variable",
+  "spec": "synthetics",
+  "source": "bootstrap",
+  "recency": "2026-09-15",
+  "topic": "Multistep API test fails at step 2 after API change",
+  "product_area": "Synthetics / Multistep API tests",
+  "environment": [
+    "Multistep API test with variable extraction",
+    "Auth API returning token"
+  ],
+  "symptom_pattern": "A multistep test that logs in then calls an authenticated endpoint now fails on step 2 with 401, but step 1 (login) passes.",
+  "root_cause": "The login response JSON shape changed (token moved under data.access_token), so the JSONPath extraction yields an empty variable and step 2 sends an empty bearer token.",
+  "resolution_path": [
+    "Inspect step 1's response body and extracted variable value",
+    "Update the JSONPath",
+    "Add an assertion on step 1 so extraction failures fail early"
+  ],
+  "info_needed": [
+    "step 1 response sample",
+    "extraction rule",
+    "step 2 request headers"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What value does the extracted variable have in the results?",
+      "customer_answer": "It's empty, now that you mention it."
+    },
+    {
+      "tse_question": "Did the auth API change recently?",
+      "customer_answer": "The backend team released v2 of the auth service last week."
+    }
+  ],
+  "customer_style": {
+    "tone": "developer, quick to blame the tool",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

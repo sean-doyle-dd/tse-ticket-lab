@@ -1,0 +1,73 @@
+{
+  "id": "synthetics-d-471d2720",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-09-28",
+  "topic": "Synthetic Monitoring data capture and whether it can contain personal data",
+  "product_area": "synthetics",
+  "environment": [
+    "Synthetic API test",
+    "Synthetic multistep API test",
+    "Synthetic browser test"
+  ],
+  "symptom_pattern": "The customer's Data Protection team needs confirmation that none of the data generated, transmitted or stored by three planned Synthetic tests (an HTTP uptime check, a multistep API login chain and a browser dashboard test) relates to an identifiable individual. This is a compliance question, not a malfunction.",
+  "root_cause": "No fault. The answer depends on what each test type captures. API and multistep API tests send only status codes and timing unless HTTP payload capture is enabled. Browser test screenshots are raw pixel captures, so they contain personal data if the page shows any. Step recording logs the starting URL verbatim, including query parameters, so a callback token in the URL is stored as-is.",
+  "resolution_path": [
+    "Explained that API and multistep API tests send only status codes and timing to Datadog, and do not parse or store response bodies unless HTTP payload capture is explicitly enabled.",
+    "Explained that browser test screenshots are raw pixel captures with no parsing, OCR, classification or redaction, so they hold personal data only if the rendered page shows it.",
+    "Explained that step recording always logs the starting URL of a step verbatim, including query parameters, and cannot tell a service-account token from a named person's token.",
+    "Recommended disabling screenshots for the browser test.",
+    "Recommended setting the callback token as a global variable marked as hidden and obfuscated, so it is masked in the recorded step URL.",
+    "The customer said the explanation gave them the clarification they needed. They will confirm the final configuration internally and asked to close the ticket."
+  ],
+  "info_needed": [
+    "Whether the dashboard page rendered in the browser test displays any user-identifying content, such as a name, username or avatar",
+    "Whether the callback token authenticates as a shared service account or as a named individual"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Would any of the data generated, transmitted or stored through these tests relate to an actual identifiable individual?",
+      "customer_answer": "The customer did not answer directly. They said the remaining points depend on their monitoring setup, application content and account provisioning, and that they would confirm these internally."
+    }
+  ],
+  "customer_style": {
+    "tone": "formal, polite and appreciative",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Capture HTTP payloads",
+    "Do not capture any screenshots for this test",
+    "Hide and obfuscate"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer split the personal-data question into its own ticket and reviewed how each Synthetic test type captures data. They then gave a per-test answer and offered two configuration changes that remove the dependency on page content and account identity.",
+    "steps": [
+      "Split the personal-data classification question from the data transmission topic already covered in the earlier ticket.",
+      "Reviewed the Synthetic Monitoring data security documentation and the browser test privacy options.",
+      "Determined what each test type captures by default: API and multistep API tests, screenshots, and step URLs.",
+      "Wrote an internal note summarising the investigation and next steps.",
+      "Replied with a per-test answer and two concrete options to remove the personal-data dependency.",
+      "Closed the ticket after the customer confirmed the answer was sufficient."
+    ],
+    "key_questions": [
+      "Whether the dashboard shows user-identifying content when the screenshot is taken",
+      "Whether the callback token belongs to a shared service account or a named person"
+    ],
+    "communication": [
+      "Restated the customer's question before answering. Handled each test separately and explained why each captures what it does, rather than only giving a yes or no. Named the exact UI options to change and pointed out which parts depend on the customer's own setup rather than on Datadog. Closed politely and told the customer the ticket would reopen on reply."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

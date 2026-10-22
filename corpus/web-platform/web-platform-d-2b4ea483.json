@@ -1,0 +1,74 @@
+{
+  "id": "web-platform-d-2b4ea483",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-19",
+  "topic": "Dashboards and Metrics Explorer fail to load with generic error after Windows timezone update",
+  "product_area": "Dashboards / Metrics Explorer (web UI)",
+  "environment": [
+    "Windows machine",
+    "Browser-based Datadog UI",
+    "Windows update that added new timezones"
+  ],
+  "symptom_pattern": "Dashboards and Metrics Explorer fail to load for one user, showing the generic error \"Oops, an error has occurred. Please retry or reload the page.\". The issue started the day a Windows update was installed. It persisted in InPrivate mode, after clearing cookies, and on a different computer. Other users with similar profiles were not affected. The customer also saw a time zone warning on login.",
+  "root_cause": "The platform failed to properly detect the browser's time zone and tried to use an invalid value, which caused the error. A Windows update had added new time zones, including the new Alberta time zone, and these broke Datadog's automatic time zone detection. This matched a known platform issue that had been escalated.",
+  "resolution_path": [
+    "Support found an existing escalation matching the symptoms and the affected time zone.",
+    "Support asked whether a Windows update had been installed the previous day, and the customer confirmed one had.",
+    "Support offered workarounds: set an explicit time zone in Personal Settings > Preferences, or change the time zone of the Windows machine.",
+    "A platform-side fix was in progress. The customer later confirmed dashboards loaded again, the time zone warning was gone, and their preferences showed a time zone of America/Edmonton."
+  ],
+  "info_needed": [
+    "Screenshots of the error behavior",
+    "Whether a Windows update was recently installed"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you share a screenshot or screen capture that covers the behavior you're seeing?",
+      "customer_answer": "The customer sent screenshots of a dashboard that almost loads, a typical dashboard error, and the Metrics Explorer error."
+    },
+    {
+      "tse_question": "Was a Windows update installed yesterday?",
+      "customer_answer": "Yes, the device updated first thing that morning and its time zone changed to the new Alberta time zone. The customer had been seeing a time zone warning on login, and the new time zone was not available in Datadog."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, factual, appreciative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "Oops, an error has occurred. Please retry or reload the page.",
+    "Personal Settings > Preferences",
+    "America/Edmonton"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer asked for screenshots, then found an existing escalation matching the symptoms. They correlated it with a recent Windows update and gave a workaround while the platform fix was pending.",
+    "steps": [
+      "Asked for a screenshot or screen capture of the behavior",
+      "Searched for similar reports and found a matching escalation about time zone detection",
+      "Asked whether a Windows update had been installed the day before",
+      "Explained the cause and offered two workarounds, noting a fix was in progress",
+      "Confirmed resolution with the customer and closed the ticket"
+    ],
+    "key_questions": [
+      "Could you share a screenshot or screencapture of the behavior?",
+      "Was a Windows update installed yesterday?"
+    ],
+    "communication": [
+      "Explained the cause in plain terms, linked it to the customer's recent Windows update, gave two concrete workarounds with the exact UI path, and said a fix was already in progress. Invited the customer to reopen if needed."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

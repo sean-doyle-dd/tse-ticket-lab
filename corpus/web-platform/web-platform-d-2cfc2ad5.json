@@ -1,0 +1,70 @@
+{
+  "id": "web-platform-d-2cfc2ad5",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-14",
+  "topic": "Datadog invitation and password reset emails not delivered due to email bounce list",
+  "product_area": "Account management / login (email delivery)",
+  "environment": [
+    "Corporate email (Office 365)",
+    "Datadog web platform user account"
+  ],
+  "symptom_pattern": "User exists in the org but never receives invitation emails or password reset emails; the customer's own email admins confirm nothing from Datadog arrived.",
+  "root_cause": "The user's email address was on Datadog's email bounce list, which stops Datadog from sending emails to an address after a previous delivery failure. This explained why neither the invitation nor the password reset email arrived.",
+  "resolution_path": [
+    "Support engineer checked and found the user's address on the email bounce list",
+    "Support engineer removed the address from the bounce list",
+    "Customer was asked to retry by having the admin team resend the invitation or by using the password reset flow",
+    "Customer confirmed they could then access their account"
+  ],
+  "info_needed": [
+    "Whether invitation and password reset emails arrive after the bounce list removal"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Could you try again, either by asking your admin team to resend the invitation or by using the password reset flow, and let us know if the email arrives?",
+      "customer_answer": "After the bounce list adjustment, the customer was able to access their Datadog account."
+    },
+    {
+      "tse_question": "Could you confirm that you can receive e-mails?",
+      "customer_answer": "Confirmed that after the bounce list change they could access their account."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite and appreciative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "We found your email address (user@example.com) on our email bounce list, which stops Datadog from sending emails to an address after a previous delivery failure."
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Reviewed the customer's report that invitation and reset emails never arrived",
+      "Found the address on the email bounce list",
+      "Removed the address from the bounce list",
+      "Asked the customer to retry via a resent invitation or the password reset flow",
+      "Followed up to request confirmation"
+    ],
+    "key_questions": [
+      "Could you try again, either by asking your admin team to resend the invitation or by using the password reset flow, and let us know if the email arrives?",
+      "Could you confirm that you can receive e-mails?"
+    ],
+    "communication": [
+      "Explained clearly why the emails were not arriving, stated what was changed, gave two ways to retry, warned that the address could be re-added to the bounce list if the mail server rejects Datadog's emails again, and offered to keep investigating if the problem persisted."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

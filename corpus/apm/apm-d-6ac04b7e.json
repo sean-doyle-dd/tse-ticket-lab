@@ -1,0 +1,95 @@
+{
+  "id": "apm-d-6ac04b7e",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-19",
+  "topic": "Span Infrastructure tab shows no host data or tags outside live view for OpenTelemetry traces",
+  "product_area": "APM / OpenTelemetry host metadata (trace Infrastructure tab)",
+  "environment": [
+    "Application running in Azure App Service",
+    "OTLP over HTTP/protobuf to a shared OpenTelemetry Collector gateway",
+    "Collector Datadog exporter and datadog connector on a traces pipeline",
+    "Logical host name set through the datadog.host.name resource attribute, not a physical machine"
+  ],
+  "symptom_pattern": "In APM Live Search, a span's Infrastructure tab shows the host and all the custom host tags. In the indexed view (30m or 1h), the Infrastructure tab says no recent data could be found and the host tags are missing. The customer can still filter on the tags, and the datadog.host.* attributes still show under Span Attributes.",
+  "root_cause": "The thread never states a precise root cause. The host was a logical identity with no system.* metrics, and the Infrastructure tab is populated from those metrics. The customer was already sending datadog.host.use_as_metadata as true with host tag attributes. Datadog support and engineering then pushed a fix on the Datadog side, which made the host tags appear in the Infrastructure tab.",
+  "resolution_path": [
+    "Asked for links to the live view and the 30m view to compare the two",
+    "Checked the host and found no system.* metrics for it, and explained that system.* metrics populate the Infrastructure tab",
+    "Recommended setting the datadog.host.use_as_metadata resource attribute to true and asked for the Collector config if that did not work",
+    "Customer confirmed the attribute was already sent as a Boolean true and shared the exporter and pipeline config",
+    "Escalated internally and then moved the question to another internal channel",
+    "Datadog pushed a fix on its side and asked the customer to confirm",
+    "Customer confirmed the Infrastructure tab now shows all the tags"
+  ],
+  "info_needed": [
+    "Links to the live view and to the 30m view of the same trace",
+    "Full Collector config, specifically the datadog exporter block and the processor list on the traces pipeline",
+    "A trace link and screenshot if any trace still lacks Infrastructure data"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share a link to the live view and a link to the 30m view?",
+      "customer_answer": "The customer shared both trace search links, one with live data and one with historical data on, using the same query."
+    },
+    {
+      "tse_question": "If setting datadog.host.use_as_metadata to true does not work, can you share the full Collector config, specifically the datadog exporter block and the processor list on the traces pipeline?",
+      "customer_answer": "The customer said they already send the attribute as Boolean true along with host name and host tag attributes. They shared the processors, connector, exporter and traces pipeline sections, with no extra resource transformation and no explicit host_metadata setting."
+    },
+    {
+      "tse_question": "Can you confirm whether the Infrastructure tab now shows the details, and if not, send the trace link and a screenshot?",
+      "customer_answer": "The customer checked and confirmed that all the tags now appear in the Infrastructure tab."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, cooperative and detailed",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "No recent data could be found",
+    "datadog.host.use_as_metadata",
+    "datadog.host.use_as_metadata = true",
+    "resource_attributes_as_tags: true",
+    "compute_stats_by_span_kind: true",
+    "peer_tags_aggregation: true",
+    "receivers: [otlp]",
+    "processors: [memory_limiter, batch]",
+    "exporters: [datadog, datadog/connector]"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer reviewed the AI assistant transcript first, then asked for live and 30m view links to compare. They found the host had no system.* metrics, suggested the host metadata attribute, and requested the Collector config. When the config showed that setup was already correct, they escalated internally, kept the customer updated, and confirmed the fix with the customer.",
+    "steps": [
+      "Reviewed the chat transcript and asked for links to the live and 30m views",
+      "Investigated how system.* metrics feed the Infrastructure tab and checked the host's metrics",
+      "Recommended datadog.host.use_as_metadata set to true and asked for the exporter block and traces pipeline processors if it did not work",
+      "Reviewed the Collector config the customer shared",
+      "Posted an internal escalation summarizing the setup and the question",
+      "Moved the question to a different internal channel and relayed that a possible fix was being tested",
+      "Told the customer the fix was pushed and asked for confirmation",
+      "Closed the ticket once the customer confirmed"
+    ],
+    "key_questions": [
+      "Can you share links to the live view and the 30m view?",
+      "Can you share the full Collector config, specifically the datadog exporter block and the processor list on the traces pipeline?",
+      "Can you confirm the Infrastructure tab now shows the details, and send the trace link and a screenshot if one does not?"
+    ],
+    "communication": [
+      "Acknowledged the transcript, then asked for specific links.",
+      "Gave the attribute to set and said what to send if it failed.",
+      "Sent a holding update when the fix was being tested, and asked for confirmation with a clear fallback request after the fix."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

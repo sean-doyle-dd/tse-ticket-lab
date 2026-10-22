@@ -1,0 +1,43 @@
+{
+  "id": "wp-browser-data-page-load",
+  "spec": "web-platform",
+  "source": "bootstrap",
+  "recency": "2026-10-10",
+  "topic": "Pages across Datadog fail to load for one user",
+  "product_area": "Web Platform / UI",
+  "environment": [
+    "Single user, multiple products affected",
+    "Chromium-based browser"
+  ],
+  "symptom_pattern": "One user reports that multiple pages across the product (dashboards, logs) fail to load or spin forever; colleagues in the same org are fine.",
+  "root_cause": "Corrupted local browser state (cookies/cache/site data) for the Datadog domain.",
+  "resolution_path": [
+    "Ask whether it happens in other orgs/browsers/incognito",
+    "Have them clear site data for the Datadog domain",
+    "Collect a HAR or console errors if it persists"
+  ],
+  "info_needed": [
+    "which pages",
+    "other browser/incognito result",
+    "console errors"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Does it happen in an incognito window?",
+      "customer_answer": "No, incognito works fine."
+    },
+    {
+      "tse_question": "Is it every org you belong to?",
+      "customer_answer": "I only have one org."
+    }
+  ],
+  "customer_style": {
+    "tone": "non-technical manager, slightly anxious",
+    "technical_level": "low",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "low"
+  ],
+  "sandbox_hint": ""
+}

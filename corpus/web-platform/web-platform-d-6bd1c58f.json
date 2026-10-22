@@ -1,0 +1,80 @@
+{
+  "id": "web-platform-d-6bd1c58f",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-09-25",
+  "topic": "Secure embed shared dashboard ignores template variable values added to selectable_template_vars after the share was created",
+  "product_area": "Dashboards - Shared dashboards / secure embed",
+  "environment": [
+    "Datadog dashboard shared as a secure embed",
+    "Signed embed URLs with tpl_var_* parameters (HMAC-SHA256)",
+    "Widgets built on log queries that use the template variables"
+  ],
+  "symptom_pattern": "Template variable preselection through the embed URL works only for values that were in selectable_template_vars[].visible_tags when the share was created. Values added later through 'Edit Default Variables' are saved, returned by the shared-dashboard API and shown in the embed's filter bar. The widgets still return unfiltered data for them. The regular dashboard and Log Explorer apply the same values correctly. A second secure embed whose values were all declared at creation filters correctly. Waiting, pausing and resuming the share, and shrinking the tenant list did not help.",
+  "root_cause": "Not confirmed by the thread. The support engineer's working hypothesis was a platform bug: the secure embed's query-time validation seems to check incoming tpl_var_* values against a snapshot of visible_tags taken at share creation, not against the current share state. This was never verified server-side. The customer's test showed that values declared at creation are applied and values added afterwards are not.",
+  "resolution_path": [
+    "The customer created a second secure embed on the same dashboard with the same settings and the full visible_tags lists declared at creation",
+    "They signed embed URLs against the new share for values that had been added to the original share, and the widgets filtered correctly",
+    "The numbers matched the dashboard itself (one count differed by 1 from the dashboard)",
+    "The customer switched their application to the new share and paused the original one",
+    "The customer noted that future additions to the list would still force them to recreate the share and rotate the credential, so a fix on the Datadog side is still wanted"
+  ],
+  "info_needed": [
+    "Share token of the affected secure embed",
+    "Approximate time and timezone of the visible_tags edit",
+    "Whether any other secure embed shows the problem after post-creation edits to the allow-list"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the token for the affected secure embed?",
+      "customer_answer": "The customer supplied the original share's id and token, its creation time, and said it was now paused and could be resumed for investigation."
+    },
+    {
+      "tse_question": "Is this the only secure embed where you have seen this, or have you seen it on others where the allow-list was edited after creation?",
+      "customer_answer": "The only other secure embed they run is on a different dashboard, and they have not seen the issue there."
+    }
+  ],
+  "customer_style": {
+    "tone": "Professional, precise and data-driven; supplied side-by-side comparisons and reproduced the fix themselves",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "selectable_template_vars[].visible_tags",
+    "HMAC-SHA256 of nonce|ts",
+    "Edit Default Variables",
+    "Pause Sharing then Resume Sharing",
+    "incoming tpl_var_* values"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "",
+    "steps": [
+      "Acknowledged the customer's comparison data and identified the pattern: values present at creation filter, values added later do not",
+      "Explained why pausing, resuming and waiting would not have helped under that hypothesis",
+      "Explained why the other embed was unaffected: all its values were declared at creation",
+      "Said this looked like a platform bug rather than a configuration error, while noting it might change with further investigation",
+      "Asked for the share token, the time of the edit and whether other embeds were affected",
+      "Said they would check internal state and flag the issue for engineering review"
+    ],
+    "key_questions": [
+      "Share token for the affected secure embed",
+      "Approximate time with timezone of the visible_tags edit, to correlate with audit and access logs",
+      "Whether any other secure embed with post-creation allow-list edits shows the issue"
+    ],
+    "communication": [
+      "Thanked the customer for specific details, gave a clear hypothesis and linked each of the customer's observations to it. Was upfront that the hypothesis was tentative. Gave a short numbered list of what was needed next and why, and said what they would do next."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-09"
+  }
+}

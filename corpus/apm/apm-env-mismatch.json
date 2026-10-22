@@ -1,0 +1,44 @@
+{
+  "id": "apm-env-mismatch",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-10-11",
+  "topic": "Service vanished from env filter and service map",
+  "product_area": "APM / Unified service tagging",
+  "environment": [
+    "Several services, one env",
+    "Kubernetes or compose"
+  ],
+  "symptom_pattern": "A backend service disappeared from the service map and service list when filtering by the team's environment; its owners insist it's still running and traced.",
+  "root_cause": "The service reports under a different env value (e.g. production instead of the team's env) due to a changed DD_ENV, so it falls outside the env filter and the map edge breaks.",
+  "resolution_path": [
+    "Search for the service across all envs",
+    "Compare DD_ENV on caller and callee",
+    "Align unified service tags (env/service/version)"
+  ],
+  "info_needed": [
+    "the env selector value",
+    "DD_ENV of each service",
+    "deployment manifests"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "If you set the env filter to All, does the service appear?",
+      "customer_answer": "Oh, yes, under env:production. We don't even have a production env for this."
+    },
+    {
+      "tse_question": "Where is DD_ENV set for that service?",
+      "customer_answer": "In a shared base image, I think."
+    }
+  ],
+  "customer_style": {
+    "tone": "calm, cooperative",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

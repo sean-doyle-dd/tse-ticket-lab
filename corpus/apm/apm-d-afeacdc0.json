@@ -1,0 +1,73 @@
+{
+  "id": "apm-d-afeacdc0",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-07-29",
+  "topic": "Software Catalog adds an incorrect www. prefix to GitHub repository URLs translated from a Backstage annotation",
+  "product_area": "Software Catalog (Backstage catalog-info.yaml ingestion via the GitHub integration)",
+  "environment": [
+    "Datadog GitHub integration",
+    "Backstage catalog-info.yaml files ingested into Software Catalog",
+    "EU1 datacenter"
+  ],
+  "symptom_pattern": "A Backstage catalog-info.yaml with a github.com/project-slug annotation is ingested by the GitHub integration and translated into Software Catalog format. The resulting repository location has a www. hostname, but repository entities in Software Catalog have no www. As a result the service is not linked to its repository entity. This shows up as broken Source Code linking, DORA metrics unable to infer the repository, and a false report that the GitHub integration is not set up.",
+  "root_cause": "The translation of the Backstage github.com/project-slug annotation into a Software Catalog repository location added a www. prefix to the GitHub hostname. Engineering confirmed this and merged a change to remove the www. prefix. The rollout reached the customer's environment later because of slow deployments during an internal incident.",
+  "resolution_path": [
+    "Support confirmed the behavior was incorrect and escalated it to engineering.",
+    "Engineering merged a change that removes the www. prefix from GitHub repository URLs.",
+    "The customer edited a catalog-info file after the merge and the code location still had www., because the change had not yet been deployed to their environment.",
+    "Support confirmed the change was later deployed in the customer's environment, and the customer verified that a re-ingested catalog-info file now produced the correct URL.",
+    "Existing catalog-info files were only re-ingested when modified, so support triggered a re-sync of the whole software catalog on the customer's behalf.",
+    "The customer confirmed everything was refreshed and working."
+  ],
+  "info_needed": [],
+  "qa_pairs": [
+    {
+      "tse_question": "Would you like us to trigger the ingestion process for your entire software catalog for your org?",
+      "customer_answer": "Yes, the customer asked for a full re-ingestion of their whole software catalog."
+    },
+    {
+      "tse_question": "Engineering says a re-sync is possible in the UI. Can you use it?",
+      "customer_answer": "The customer did not have the Re-Sync button in their account, so they asked support to start the re-sync for them."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, collaborative, and persistent about the business impact on DORA metrics adoption",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "github.com/project-slug",
+    "catalog-info.yaml"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer reproduced the behavior, agreed with the customer that it was a bug, and escalated it to engineering. They kept the customer informed through a slow rollout, then arranged a catalog-wide re-sync for the customer.",
+    "steps": [
+      "Tested the reported behavior and confirmed it was incorrect.",
+      "Asked the code-security team in Slack and escalated to engineering through a Jira card.",
+      "Updated the customer when the fix was merged.",
+      "Investigated why the customer's test edit still showed www. and found the deployment was delayed by an internal incident.",
+      "Confirmed when the change was deployed to the customer's environment.",
+      "Checked with engineering about re-ingesting the whole catalog and triggered the sync on the customer's behalf.",
+      "Told the customer when the Re-Sync UI button was expected to be available for their region."
+    ],
+    "key_questions": [
+      "Would the customer like support to trigger the ingestion process for the entire software catalog?"
+    ],
+    "communication": [
+      "Gave regular status updates through the escalation and explained that the delayed rollout was caused by an internal incident. Offered the full re-sync proactively and told the customer when to retest. Gave the Closed-after-5-business-days policy and a way to reopen."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-07"
+  }
+}

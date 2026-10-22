@@ -1,0 +1,81 @@
+{
+  "id": "web-platform-d-a676dc87",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-15",
+  "topic": "Bulk update of user login email handles after customer email domain migration",
+  "product_area": "Account management / user login (SSO)",
+  "environment": [
+    "Datadog EU site",
+    "Multiple organizations (dev and prod)",
+    "SSO login"
+  ],
+  "symptom_pattern": "Customer's IT team is migrating users to a new email domain, which also affects SSO login, so the Datadog login email (handle) of the affected users must be changed at a scheduled time. The customer supplied CSV files of users and asked Support to apply the change.",
+  "root_cause": "Not a fault. The customer's email domain migration changes SSO login emails, so the Datadog user handles had to be updated to match. This required Support to update the handles.",
+  "resolution_path": [
+    "Customer asked for the handle update to be scheduled for a specific time and sent a CSV of affected users",
+    "Customer corrected the request before it was applied: one user was to be excluded and another was to be updated on a second organization",
+    "Ticket was reassigned to an EMEA region TSE because the change had to happen during EMEA hours",
+    "TSE asked which organizations and region the change applied to, asked for one CSV per org, and confirmed the date and time",
+    "Customer supplied one CSV per org and confirmed the date and time",
+    "TSE confirmed the requestor was an admin in both orgs",
+    "TSE updated the email handles for the users in both orgs per the CSV files",
+    "Customer confirmed the change worked as expected"
+  ],
+  "info_needed": [
+    "Organization name and region for each org to be changed",
+    "One CSV file per organization",
+    "Confirmation of the date and time of the change"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which organization name and region do these changes apply to, and can you provide one CSV file per org?",
+      "customer_answer": "Customer provided two CSV files, one for each org, both in the EU region."
+    },
+    {
+      "tse_question": "Is the change to take place on the stated date at the stated time?",
+      "customer_answer": "Customer confirmed the date and time."
+    },
+    {
+      "tse_question": "Is everything working as expected now that the change has been made?",
+      "customer_answer": "Customer confirmed it was OK."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, professional",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The TSE took a scheduled bulk email-handle change request, clarified scope (orgs, region, one CSV per org, timing), verified the requestor's admin status in both orgs, applied the change, and asked the customer to confirm.",
+    "steps": [
+      "Introduced themself and acknowledged the request including the customer's correction",
+      "Asked for org names, region and separate CSV per org",
+      "Confirmed the date and time of the change",
+      "Verified the requestor was an admin in each org",
+      "Updated the email handles per the CSVs",
+      "Asked the customer to confirm everything worked"
+    ],
+    "key_questions": [
+      "Which organization name and region do these changes need to apply to, with one CSV per org?",
+      "Is the change to take place on the stated date and time?",
+      "Is everything working as expected now that the change has been actioned?"
+    ],
+    "communication": [
+      "Acknowledged the customer's correction up front, asked for specific missing details in one message, and reported back with the count of users updated per org and a request for confirmation."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

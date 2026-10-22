@@ -1,0 +1,81 @@
+{
+  "id": "apm-d-d58718a0",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-15",
+  "topic": "Tracking an individual RabbitMQ message with Data Streams Monitoring versus APM distributed tracing",
+  "product_area": "apm",
+  "environment": [
+    "Kubernetes",
+    "RabbitMQ cluster with publisher and consumer apps",
+    "APM automatic instrumentation"
+  ],
+  "symptom_pattern": "The customer can see a full request flow in APM when services call each other over HTTP. For RabbitMQ messages they believed they lost track of the message once it entered the queue. They asked whether Data Streams Monitoring could follow a single message.",
+  "root_cause": "Data Streams Monitoring is not designed to follow an individual message. It gives pipeline-level views of RabbitMQ flows: topology, end-to-end latency and throughput. Following a single message is done with APM distributed tracing, where the publisher writes trace context into the AMQP message headers and the consumer continues the trace. The customer later found the full flow, including RabbitMQ consumption, already visible in APM. They did not identify why they had not seen it earlier and suspected a mistake on their side.",
+  "resolution_path": [
+    "The engineer explained that Data Streams Monitoring gives pipeline-level views (topology of producers, queues and consumers, latency, throughput, payload size) rather than per-message tracking.",
+    "The engineer pointed to APM distributed tracing, with trace context in the AMQP message headers, as the way to follow a single message.",
+    "The engineer listed per-language propagation behavior: Java on by default, Python Kombu needs enabling, Node.js amqplib and rhea covered by automatic instrumentation, and .NET and PHP may need context extracted in code.",
+    "The customer inspected APM traces and found the whole flow, including RabbitMQ consuming, already visible.",
+    "The engineer summarized the DSM versus APM distinction and closed the ticket at the customer's request."
+  ],
+  "info_needed": [
+    "Language of the publishing and consuming services, whether they use the Datadog SDK or OpenTelemetry, and the tracer version",
+    "RabbitMQ client library or framework on each side",
+    "A trace ID or link where the flow stops after publishing, the approximate UTC time, and the consumer service expected next"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Which language do the publishing and consuming services use, do they use the Datadog SDK or OpenTelemetry, and which tracer version?",
+      "customer_answer": "Not answered. The customer found the full flow in APM on their own and did not need to provide this."
+    },
+    {
+      "tse_question": "Which RabbitMQ client library or framework is used on each side?",
+      "customer_answer": "Not answered, for the same reason."
+    },
+    {
+      "tse_question": "Can you share a trace where the flow stops after publishing, the approximate time, and the consumer service you expected next?",
+      "customer_answer": "The customer instead shared a trace showing the full flow including RabbitMQ consumption, and said they probably did something wrong earlier."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, appreciative",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "sandbox_hint": "apm/multi-service",
+  "evidence": [
+    "DD_TRACE_RABBIT_PROPAGATION_ENABLED",
+    "DD_PATCH_MODULES=\"kombu:true\""
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer answered the conceptual question directly, separating what Data Streams Monitoring does from what APM distributed tracing does. They then asked targeted questions to locate where trace context might be lost. After the customer self-resolved, the engineer summarized the key points and closed the ticket.",
+    "steps": [
+      "Stated that Data Streams Monitoring is pipeline-level and not per-message, and listed the metrics it offers.",
+      "Listed supported RabbitMQ languages, client libraries and minimum tracer and Agent versions for DSM.",
+      "Explained that following a single message needs APM distributed tracing with context propagated in AMQP headers.",
+      "Gave per-language propagation notes for Java, Python, Node.js, .NET and PHP.",
+      "Asked for language, SDK, tracer version, client library and an example trace where the flow stops.",
+      "After the customer found the flow in APM, recapped the DSM versus APM distinction and closed the ticket as requested."
+    ],
+    "key_questions": [
+      "What language and tracer version do the publishing and consuming services use, and do they use the Datadog SDK or OpenTelemetry?",
+      "Which RabbitMQ client library or framework is used on each side?",
+      "Can you share one trace where the flow stops after publishing, with the approximate UTC time and the consumer service you expected next?"
+    ],
+    "communication": [
+      "Answered the direct question first. Organized the explanation by language and added doc references for each point. Explained why each piece of information was needed (to see where context is lost and point to the exact change). Ended with a short recap and an open invitation to reply or open a new ticket."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

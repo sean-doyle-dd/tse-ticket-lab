@@ -1,0 +1,43 @@
+{
+  "id": "apm-node-tracer-not-loaded",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-08-25",
+  "topic": "Node service missing from APM after Dockerfile refactor",
+  "product_area": "APM / Node.js tracer",
+  "environment": [
+    "Node.js service with dd-trace",
+    "Docker image rebuild"
+  ],
+  "symptom_pattern": "A Node.js service disappeared from the APM service catalog after a Dockerfile refactor; the upstream Python service now shows as the root with no downstream spans.",
+  "root_cause": "The tracer was loaded via NODE_OPTIONS=--require dd-trace/init, which was dropped in the refactor, so dd-trace never initialises.",
+  "resolution_path": [
+    "Check for tracer startup logs (DD_TRACE_STARTUP_LOGS) in the container output",
+    "Confirm how dd-trace is loaded (NODE_OPTIONS or require as first line)",
+    "Restore the preload and redeploy"
+  ],
+  "info_needed": [
+    "container logs at startup",
+    "NODE_OPTIONS / entrypoint",
+    "package.json dd-trace version"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Do you see a 'DATADOG TRACER CONFIGURATION' line when the container starts?",
+      "customer_answer": "No, nothing like that."
+    },
+    {
+      "tse_question": "How is dd-trace loaded in the app?",
+      "customer_answer": "It's in package.json. I don't think we require it anywhere in code."
+    }
+  ],
+  "customer_style": {
+    "tone": "junior developer, apologetic",
+    "technical_level": "low",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

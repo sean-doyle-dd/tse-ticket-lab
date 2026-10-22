@@ -1,0 +1,93 @@
+{
+  "id": "synthetics-d-445ae263",
+  "spec": "synthetics",
+  "source": "distilled",
+  "recency": "2026-08-12",
+  "topic": "Multistep API test run from a suite via CI/CLI did not show failed steps immediately",
+  "product_area": "Synthetics - Multistep API tests / Continuous Testing (CI results)",
+  "environment": [
+    "datadog-ci v5.19.0",
+    "datadog-ci synthetics plugin v5.19.0",
+    "Tests triggered from the CLI on a desktop and from a CI/CD pipeline",
+    "Multistep API test included in a test suite",
+    "JUnit report enabled"
+  ],
+  "symptom_pattern": "When a failed multistep API test was opened in the results after a run triggered through datadog-ci (CLI or CI/CD), only the passed steps were listed. The failed and remaining steps appeared 10-15 minutes later. Running the same test on its own did not reproduce it.",
+  "root_cause": "The thread does not state the technical cause. The Dev team reproduced the problem through an engineering escalation and rolled out a fix on the Datadog side.",
+  "resolution_path": [
+    "The support engineer could not reproduce it by running the multistep test on its own.",
+    "The customer clarified that it only happens when the test is part of a suite run via CI/CD or the CLI.",
+    "The support engineer asked for the batch ID, the Continuous Testing parallelization setting, and the datadog-ci version and trigger method.",
+    "The support engineer escalated to the Synthetics specialist team and then to the Escalations team, which raised an engineering issue.",
+    "The Dev team reproduced the issue and rolled out a fix.",
+    "The customer retested and confirmed the failed steps now show immediately when a failed test is opened."
+  ],
+  "info_needed": [
+    "Batch ID or CI pipeline run URL for the affected run",
+    "Continuous Testing parallelization/concurrency setting",
+    "datadog-ci version in use",
+    "How tests are triggered (native CI integration vs raw API calls)"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you clone the test and create one we can run to see if we get the same issue?",
+      "customer_answer": "Said it does not reproduce when the test is run individually. It only happens when the test is in a suite and run from CI/CD or the CLI. Offered a demo call."
+    },
+    {
+      "tse_question": "What is the batch ID or CI pipeline run URL for the run shown in the video?",
+      "customer_answer": "Provided a link to the CI batch result in the Synthetics explorer."
+    },
+    {
+      "tse_question": "What is the Continuous Testing parallelization/concurrency setting?",
+      "customer_answer": "Did not know where to find it."
+    },
+    {
+      "tse_question": "Which datadog-ci version is in use and how are tests triggered?",
+      "customer_answer": "Used datadog-ci v5.19.0 with the synthetics plugin v5.19.0, run via the CLI with a config file and a JUnit report. The same happens from the CI/CD pipeline."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, cooperative, appreciative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "datadog-ci v5.19.0",
+    "@datadog/datadog-ci-plugin-synthetics v5.19.0",
+    "datadog-ci synthetics run-tests",
+    "--jUnitReport",
+    "pt_synthetics_test_type:multistep_api",
+    "Failed Multistep test cases does not show the failed step Immediately"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The support engineer first tried to reproduce the issue on their own. After the customer clarified that it only happens in suite runs via CI/CLI, they collected run details and escalated to engineering. They then relayed the fix and asked the customer to verify it.",
+    "steps": [
+      "Acknowledged the ticket and reviewed the attached video.",
+      "Tried to reproduce the issue and asked for a cloned test.",
+      "Asked the Synthetics specialist channel whether this was a known issue.",
+      "Requested the batch ID, the parallelization setting and the datadog-ci version and trigger method.",
+      "Escalated to the Escalations team and kept the customer updated.",
+      "Told the customer when the Dev team had reproduced the issue and rolled out a fix, and asked them to retest.",
+      "Confirmed the result with the customer and closed the case."
+    ],
+    "key_questions": [
+      "Can you clone the test so we can run it and analyze the issue?",
+      "What is the batch ID or CI pipeline run URL for the run in the video?",
+      "What is the Continuous Testing parallelization/concurrency setting?",
+      "Which datadog-ci version is in use, and are tests triggered through the native CI integration or raw API calls?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

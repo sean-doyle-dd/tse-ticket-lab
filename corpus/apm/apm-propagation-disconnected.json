@@ -1,0 +1,44 @@
+{
+  "id": "apm-propagation-disconnected",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-07-08",
+  "topic": "Distributed traces split into separate traces",
+  "product_area": "APM / Distributed tracing",
+  "environment": [
+    "Python frontend calling Node backend over HTTP",
+    "Mixed tracer versions"
+  ],
+  "symptom_pattern": "Traces between a frontend and backend service used to be connected; now each service shows its own root span and the service map edge is gone.",
+  "root_cause": "Header injection was disabled on the caller (DD_TRACE_PROPAGATION_STYLE_INJECT=none, set while trying to remove W3C headers), so no trace context reaches the backend.",
+  "resolution_path": [
+    "Compare propagation env vars on both sides",
+    "Capture request headers at the backend (debug logs)",
+    "Restore injection of a style the backend extracts (datadog,tracecontext)"
+  ],
+  "info_needed": [
+    "propagation-related env vars",
+    "tracer versions",
+    "a pair of trace IDs that should be linked"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Have any DD_TRACE_PROPAGATION_* variables been set recently?",
+      "customer_answer": "We set INJECT=none on the frontend because a partner API complained about traceparent headers."
+    },
+    {
+      "tse_question": "Do backend spans show a parent_id?",
+      "customer_answer": "parent_id is 0 on all of them."
+    }
+  ],
+  "customer_style": {
+    "tone": "articulate, has done some research, holds a wrong theory about a tracer bug",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

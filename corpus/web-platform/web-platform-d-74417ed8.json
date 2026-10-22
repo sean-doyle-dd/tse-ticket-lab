@@ -1,0 +1,86 @@
+{
+  "id": "web-platform-d-74417ed8",
+  "spec": "web-platform",
+  "source": "distilled",
+  "recency": "2026-10-15",
+  "topic": "Login fails with wrong username or password after a password reset",
+  "product_area": "Account access / authentication (web login)",
+  "environment": [
+    "Datadog org hosted in the EU region",
+    "Chrome browser",
+    "Single user affected; rest of the team unaffected"
+  ],
+  "symptom_pattern": "A user resets their password, but every login attempt afterwards fails with a 'wrong username or password' error. The same error appears on the region-specific login page and on the 'Login (all regions)' option. The user first reported not receiving a reset email, but later confirmed it arrived. Teammates are not affected.",
+  "root_cause": "The customer confirmed the problem was in the browser, most likely stale cache and/or cookies. The password reset itself had succeeded, and login worked in a fresh Incognito window.",
+  "resolution_path": [
+    "Triggered a password reset email from the support side and confirmed it was sent",
+    "Confirmed the customer's org region and gave the matching regional login page",
+    "Asked for the exact login error message, then offered a call, which the customer declined because of a poor connection",
+    "Saw that the password reset had completed successfully",
+    "Asked the customer to clear browser cache and cookies and retry the login",
+    "Customer tried Chrome in Incognito Mode and logged in successfully, which pointed to a browser cache/cookie issue"
+  ],
+  "info_needed": [
+    "Whether the password reset email arrived, including the spam/junk folder",
+    "The exact error message shown at login",
+    "Whether login works after clearing browser cache and cookies, or in a private window"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Did the password reset email arrive in your inbox, including spam or junk?",
+      "customer_answer": "Yes, the reset email arrived, but the login error persisted after resetting."
+    },
+    {
+      "tse_question": "What error message do you see after entering your email and password?",
+      "customer_answer": "Shared a screenshot, and later said the message is 'wrong username or password'. The same error appears with the all-regions login option."
+    },
+    {
+      "tse_question": "Would you like to jump on a short call to troubleshoot?",
+      "customer_answer": "Declined for now because of an unstable connection that day."
+    },
+    {
+      "tse_question": "Could you clear your browser cache and cookies and try logging in again?",
+      "customer_answer": "Tried Chrome in Incognito Mode instead and it worked, so they concluded it was a browser cache/cookie issue."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, concise, cooperative",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "wrong username or password",
+    "clear your browser cache and cookies",
+    "Incognito Mode",
+    "Login (all regions)"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "low"
+  ],
+  "tse_approach": {
+    "summary": "The engineer ruled out the email delivery problem first by triggering a reset and confirming it was sent. They then confirmed the region and the exact login error, and had the customer clear browser cache and cookies. That resolved the ticket.",
+    "steps": [
+      "Triggered a password reset from the support side and asked the customer to check inbox and spam",
+      "Pointed the customer to the correct regional login page for their org",
+      "Asked for the exact error message seen at login",
+      "Offered a short call to troubleshoot live",
+      "Asked the customer to clear browser cache and cookies and retry",
+      "Closed out with a follow-up explaining how to reopen the ticket and linking the feedback survey"
+    ],
+    "key_questions": [
+      "Did the reset email arrive, including spam or junk?",
+      "What error message do you see after entering your email and password?",
+      "Could you clear your browser cache and cookies, then try logging in again?"
+    ],
+    "communication": [],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "low",
+    "solved_month": "2026-10"
+  }
+}

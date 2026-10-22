@@ -1,0 +1,44 @@
+{
+  "id": "apm-logs-injection-off",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-08-02",
+  "topic": "No logs on trace side panel",
+  "product_area": "APM / Trace \u2194 log correlation",
+  "environment": [
+    "Python service with ddtrace",
+    "Container log collection"
+  ],
+  "symptom_pattern": "The 'Logs' tab on traces is always empty for one service even though its logs are in Log Explorer.",
+  "root_cause": "Logs injection is disabled (DD_LOGS_INJECTION=false), so log lines carry no dd.trace_id/dd.span_id to correlate on.",
+  "resolution_path": [
+    "Check a log for dd.trace_id",
+    "Check DD_LOGS_INJECTION and log format",
+    "Enable injection and confirm trace ids are parsed by the pipeline"
+  ],
+  "info_needed": [
+    "a sample log line",
+    "logger format",
+    "tracer env vars"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you paste a raw log line from that service?",
+      "customer_answer": "... [dd.service=- dd.env=- dd.trace_id=- dd.span_id=-] checkout started"
+    },
+    {
+      "tse_question": "Is DD_LOGS_INJECTION set?",
+      "customer_answer": "It's false in our env file; I don't know why."
+    }
+  ],
+  "customer_style": {
+    "tone": "polite, mid-level",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

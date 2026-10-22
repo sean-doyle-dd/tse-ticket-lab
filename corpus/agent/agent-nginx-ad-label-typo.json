@@ -1,0 +1,44 @@
+{
+  "id": "agent-nginx-ad-label-typo",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-09-28",
+  "topic": "NGINX integration shows no data after moving to Autodiscovery labels",
+  "product_area": "Agent / Autodiscovery",
+  "environment": [
+    "Docker hosts, Agent 7 container",
+    "NGINX configured via com.datadoghq.ad.* labels"
+  ],
+  "symptom_pattern": "After migrating integration config from conf.d files to Docker labels, the NGINX integration tile shows no data; logs from the container still arrive.",
+  "root_cause": "The Autodiscovery check label has a typo in the check name (e.g. 'ngnix') or points nginx_status_url at localhost, so either nothing is scheduled or the check can't connect.",
+  "resolution_path": [
+    "Run agent configcheck to see whether an nginx check was resolved for the container",
+    "Inspect the container labels",
+    "Fix the check name / use %%host%% and verify agent status"
+  ],
+  "info_needed": [
+    "container labels",
+    "agent configcheck output",
+    "agent status collector section"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the labels on the nginx container?",
+      "customer_answer": "com.datadoghq.ad.checks: {\"ngnix\": {\"instances\": [...]}} copied from our wiki."
+    },
+    {
+      "tse_question": "What does agent configcheck show?",
+      "customer_answer": "There's an error about a check named ngnix not being found, but I assumed that was a warning."
+    }
+  ],
+  "customer_style": {
+    "tone": "friendly, admits they might have made a mistake",
+    "technical_level": "medium",
+    "urgency": "low"
+  },
+  "difficulty_range": [
+    "low",
+    "medium"
+  ],
+  "sandbox_hint": "agent/nginx-check"
+}

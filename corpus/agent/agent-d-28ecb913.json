@@ -1,0 +1,61 @@
+{
+  "id": "agent-d-28ecb913",
+  "spec": "agent",
+  "source": "distilled",
+  "recency": "2026-10-06",
+  "topic": "SNMP check running over 5 minutes on large Cisco devices due to route table collection",
+  "product_area": "Agent / SNMP integration (Network Device Monitoring)",
+  "environment": [
+    "Linux",
+    "Datadog Agent with SNMP integration",
+    "Large Cisco network devices resolving to the default Cisco SNMP profile",
+    "collect_vpn enabled on the SNMP instances"
+  ],
+  "symptom_pattern": "SNMP check durations exceed 5 minutes on a few large network devices. The customer traced it to OIDs under the IP route table returning extremely large numbers of rows. Those OIDs do not appear in the default Cisco profile the devices resolve to.",
+  "root_cause": "The OID is ipCidrRouteStatus, which is not collected as a profile metric. It was being walked because collect_vpn was enabled on both instances. With that option on, the Agent also collects ipCidrRouteTable and inetCidrRouteTable on every run, so devices with large routing tables take a very long time per check run.",
+  "resolution_path": [
+    "Identified the OID as part of the IP route table (ipCidrRouteStatus) and not a profile metric",
+    "Linked the route table collection to the collect_vpn option enabled on both instances",
+    "Set collect_vpn: false on the two affected instances in conf.d/snmp.d/conf.yaml",
+    "Restarted the Agent and checked the check durations",
+    "Customer confirmed the long durations were fixed"
+  ],
+  "info_needed": [],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "friendly, informal and appreciative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "collect_vpn: false",
+    "conf.d/snmp.d/conf.yaml"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The engineer recognized the customer's debugging finding as the key clue and tied the OID to the collect_vpn option rather than the profile. They gave a precise config change, stated what would be lost, and moved the ticket to Solved so the customer could test.",
+    "steps": [
+      "Acknowledged the customer's debugging as useful",
+      "Identified the OID as ipCidrRouteStatus and explained it comes from collect_vpn, not the profile",
+      "Explained that collect_vpn also walks ipCidrRouteTable and inetCidrRouteTable on every run",
+      "Gave the config change, collect_vpn: false per instance, with a restart and a check of durations",
+      "Stated the trade-off: VPN tunnel monitoring is lost on those devices, while interface metrics, metadata and topology are unaffected",
+      "Moved the ticket to Solved with a 5 business day window for testing and follow-up"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Opened by validating the customer's own debugging. Explained why the OID was not in the profile before giving the fix. Showed the config snippet per instance. Said plainly what would be lost and what would not. Explained the ticket status and what happens next."
+    ],
+    "customer_feedback": "Customer said the issue was solved very quickly."
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-10"
+  }
+}

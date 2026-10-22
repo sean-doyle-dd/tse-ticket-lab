@@ -1,0 +1,87 @@
+{
+  "id": "apm-d-6abb9c9b",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-10-07",
+  "topic": "APM trace metrics grouped by peer.hostname return N/A for most downstream services",
+  "product_area": "APM - trace metrics / peer tags",
+  "environment": [
+    "Datadog Agent 7.52.1 with the trace-agent configured via environment variables",
+    "Node.js tracer on the affected client service",
+    "JVM service using the Java tracer",
+    "US region org"
+  ],
+  "symptom_pattern": "A trace.http.request.hits metric query filtered on span.kind:client and grouped by peer.hostname returns N/A for most downstream services. Only one peer.hostname value appears in Metrics Summary for that metric.",
+  "root_cause": "The Agent only collects the exact tag keys in its built-in peer tag list plus anything added in DD_APM_PEER_TAGS. The Node tracer records the outbound HTTP destination host under out.host. That key was in neither the Agent 7.52.1 built-in list nor the customer's DD_APM_PEER_TAGS value, so nothing was collected for that service and the peer.hostname breakdown was N/A. The one visible peer.hostname value came from a JVM service whose Java tracer writes peer.hostname directly, a key already in the list.",
+  "resolution_path": [
+    "Compared the query against the tag values listed for the metric in Metrics Summary. Only one peer.hostname value was present.",
+    "Asked for the trace-agent environment and confirmed the peer-tag settings were on the correct container.",
+    "Identified that out.host was missing from DD_APM_PEER_TAGS.",
+    "Added \"out.host\" to the DD_APM_PEER_TAGS value on the trace-agent and restarted it. No Agent upgrade and no query change was needed.",
+    "Also recommended adding dns.hostname, which was also missing from the configured list.",
+    "Customer confirmed peer.hostname now works for the APM metrics."
+  ],
+  "info_needed": [
+    "Which region/site the org is in",
+    "The trace-agent environment variables, including DD_APM_PEER_TAGS"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Is this in your EU or US org?",
+      "customer_answer": "The customer said it was the US org."
+    },
+    {
+      "tse_question": "Asked the customer to send the trace-agent environment configuration.",
+      "customer_answer": "The customer sent the trace-agent environment, which allowed the missing peer tag key to be identified."
+    }
+  ],
+  "customer_style": {
+    "tone": "friendly, appreciative, direct",
+    "technical_level": "medium",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "apm/multi-service",
+  "evidence": [
+    "DD_APM_PEER_TAGS",
+    "out.host",
+    "trace.http.request.hits",
+    "span.kind:client",
+    "peer.hostname",
+    "dns.hostname",
+    "On an outbound HTTP span the Node tracer records the destination host under a tag called out.host",
+    "out.host is in neither the Agent's built-in list for 7.52.1 nor the list you configured",
+    "The Java tracer records the host under peer.hostname directly",
+    "[\"_dd.base_service\",\"amqp.destination\",\"amqp.exchange\",\"amqp.queue\",\"aws.queue.name\",\"aws.s3.bucket\",\"bucketname\",\"cassandra.keyspace\",\"db.cassandra.contact.points\",\"db.couchbase.seed.nodes\",\"db.hostname\",\"db.instance\",\"db.name\",\"db.namespace\",\"db.system\",\"dns.hostname\",\"grpc.host\",\"hostname\",\"http.host\",\"http.server_name\",\"messaging.destination\",\"messaging.destination.name\",\"messaging.kafka.bootstrap.servers\",\"messaging.rabbitmq.exchange\",\"messaging.system\",\"mongodb.db\",\"msmq.queue.path\",\"net.peer.name\",\"network.destination.name\",\"out.host\",\"peer.hostname\",\"peer.service\",\"queuename\",\"rpc.service\",\"rpc.system\",\"server.address\",\"streamname\",\"tablename\",\"topicname\"]"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "medium"
+  ],
+  "tse_approach": {
+    "summary": "The engineer first checked the metric's tag values in Metrics Summary and saw that the tag was set for only one host. After getting the trace-agent environment, they traced the problem to a missing key in DD_APM_PEER_TAGS and gave a precise fix.",
+    "steps": [
+      "Confirmed which region the org was in.",
+      "Reviewed the metric's tag values in Metrics Summary and shared a screenshot showing only one peer.hostname value.",
+      "Asked for the trace-agent environment.",
+      "Analyzed the Agent's peer tag mechanism against the tracer-specific tag names.",
+      "Explained why one service showed a value and the others did not.",
+      "Gave the exact fix: add out.host to DD_APM_PEER_TAGS and restart the trace-agent.",
+      "Provided the full recommended tag list for the Agent version.",
+      "Confirmed the original query was correct and closed the ticket after the customer confirmed the fix."
+    ],
+    "key_questions": [
+      "Is this in your EU or US org?",
+      "Request for the trace-agent environment configuration"
+    ],
+    "communication": [
+      "Explained why the behaviour happens (the Agent only looks for the exact tag keys it is given) and why one service happened to work. Stated what could stay unchanged (the query, the other settings, the Agent version). Supplied the complete recommended tag list and noted the extra missing key, dns.hostname."
+    ],
+    "customer_feedback": "Customer praised the support as very responsive."
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "medium",
+    "solved_month": "2026-10"
+  }
+}

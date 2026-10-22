@@ -1,0 +1,64 @@
+{
+  "id": "apm-d-9ed1b51e",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-08-10",
+  "topic": "Native memory growth in .NET test host with CI Visibility code coverage enabled",
+  "product_area": "CI Visibility / Test Impact Analysis (.NET tracer)",
+  "environment": [
+    "Windows build servers",
+    ".NET test service run under a test host process",
+    "dd-trace-dotnet with CI Visibility Test Impact Analysis / code coverage enabled"
+  ],
+  "symptom_pattern": "After Test Impact Analysis was enabled, test host processes used steadily more memory until the build servers ran out of memory. The growth continued with TIA disabled once code coverage was enabled by environment variable. A memory dump showed most of the memory was native heap, not the managed GC heap.",
+  "root_cause": "The coverage handler used with Test Impact Analysis was designed to keep all coverage data in memory until a global coverage calculation ran. That cleanup path was never triggered in the customer's pipeline. The coverage containers and their native allocations therefore built up across test sessions and were never freed. Engineering fixed this in the tracer.",
+  "resolution_path": [
+    "The customer analysed a memory dump and traced the native growth to unfreed Marshal.AllocHGlobal buffers held by ModuleValue objects. These were retained by CoverageContextContainer entries in a list rooted in the global coverage event handler.",
+    "The TSE validated the findings with engineering, escalated internally, and pointed the customer to an open pull request that bounds global coverage memory.",
+    "Engineering confirmed the root cause and the pull request was reviewed and merged.",
+    "The fix is scheduled for dd-trace-dotnet 3.51.0, which was not yet released when the ticket was closed. The customer was asked to validate once it ships."
+  ],
+  "info_needed": [],
+  "qa_pairs": [],
+  "customer_style": {
+    "tone": "professional, technical, increasingly impatient as the issue went unanswered",
+    "technical_level": "high",
+    "urgency": "high"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "DD_CIVISIBILITY_CODE_COVERAGE_ENABLED=true",
+    "!address -summary: MEM_COMMIT = 21.225 GB",
+    "!eeheap -gc: ~2.75 GB",
+    "!dumpheap -stat -type ModuleValue",
+    "System_Private_CoreLib!System.Runtime.InteropServices.Marshal.AllocHGlobal(IntPtr)+0xffffffffae38c5ae",
+    "DefaultWithGlobalCoverageEventHandler (1)",
+    "_coverages : List<CoverageContextContainer> (1)",
+    "60,863 ModuleValue \u2192 60,863 unfreed Marshal.AllocHGlobal buffers (~16 GB)"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE acknowledged the customer's detailed memory dump analysis and validated it with engineering. They escalated internally, then shared the open pull request and later the merged fix with its target release. The ticket was closed with clear reopen instructions.",
+    "steps": [
+      "Acknowledged the customer's investigation and said it would be validated with the engineering team",
+      "Escalated internally and kept the customer updated after they chased",
+      "Shared the open pull request that addressed the issue and explained it was a non-trivial fix needing review",
+      "Confirmed the root cause and the merged fix, and named the release it would ship in",
+      "Answered the customer's question about an unrelated pull request and closed the ticket with reopen instructions"
+    ],
+    "key_questions": [],
+    "communication": [
+      "Credited the customer's debugging work. Explained the root cause in plain terms and linked the fix and the release page. Said plainly that the fix was unreleased. Gave an explicit path to reopen the ticket."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}

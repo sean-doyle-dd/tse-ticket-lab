@@ -1,0 +1,44 @@
+{
+  "id": "apm-sample-rate-zero",
+  "spec": "apm",
+  "source": "bootstrap",
+  "recency": "2026-09-30",
+  "topic": "Traces visible in Live Search but disappear later",
+  "product_area": "APM / Ingestion & retention",
+  "environment": [
+    "Python ddtrace",
+    "Ingestion controls"
+  ],
+  "symptom_pattern": "Engineers see traces in Live Search for a few minutes but can't find them later in Trace Explorer with a 15-day view; the customer suspects data loss.",
+  "root_cause": "DD_TRACE_SAMPLE_RATE=0 on the service means traces are sent but not kept (ingested); only the live window shows them. Retention filters only apply to ingested spans.",
+  "resolution_path": [
+    "Explain live vs ingested vs indexed spans",
+    "Check the service's ingestion reason/sample rate in Ingestion Control",
+    "Remove or raise the sample rate / use ingestion rules intentionally"
+  ],
+  "info_needed": [
+    "ingestion control page for the service",
+    "tracer sampling env vars",
+    "where they search"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "What does Ingestion Control show for this service?",
+      "customer_answer": "Ingested 0%, configured by 'rule' it says."
+    },
+    {
+      "tse_question": "Are any DD_TRACE_SAMPLE_RATE or sampling rules set?",
+      "customer_answer": "Someone set DD_TRACE_SAMPLE_RATE=0 to cut costs months ago, maybe?"
+    }
+  ],
+  "customer_style": {
+    "tone": "cost-conscious manager, worried about billing",
+    "technical_level": "medium",
+    "urgency": "high"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": "apm/multi-service"
+}

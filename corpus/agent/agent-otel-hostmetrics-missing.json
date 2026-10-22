@@ -1,0 +1,44 @@
+{
+  "id": "agent-otel-hostmetrics-missing",
+  "spec": "agent",
+  "source": "bootstrap",
+  "recency": "2026-06-03",
+  "topic": "Host OS metrics missing with OpenTelemetry Collector",
+  "product_area": "Agent / OpenTelemetry Collector",
+  "environment": [
+    "Kubernetes",
+    "OTel contrib collector DaemonSet exporting to Datadog"
+  ],
+  "symptom_pattern": "Pod and node metrics from kubeletstats arrive but system.cpu / system.mem metrics are missing for hosts sending through an OpenTelemetry collector.",
+  "root_cause": "Host OS metrics need the hostmetrics receiver in the DaemonSet pipeline; it was deployed separately (or not wired into the metrics pipeline), so no system metrics were produced.",
+  "resolution_path": [
+    "Review the collector config receivers and pipelines",
+    "Add hostmetrics to the DaemonSet's metrics pipeline (single collector per node)",
+    "Redeploy and confirm system.* metrics"
+  ],
+  "info_needed": [
+    "collector config YAML",
+    "deployment topology",
+    "exporter logs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you share the receivers and service.pipelines sections of the collector config?",
+      "customer_answer": "receivers: kubeletstats only; there's a separate hostmetrics collector a colleague set up."
+    },
+    {
+      "tse_question": "Is the hostmetrics collector deployed as a DaemonSet?",
+      "customer_answer": "I think it's a Deployment with one replica."
+    }
+  ],
+  "customer_style": {
+    "tone": "knowledgeable about OTel, skeptical of vendor agents",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "difficulty_range": [
+    "medium",
+    "high"
+  ],
+  "sandbox_hint": ""
+}

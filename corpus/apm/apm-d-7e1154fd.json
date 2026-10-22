@@ -1,0 +1,100 @@
+{
+  "id": "apm-d-7e1154fd",
+  "spec": "apm",
+  "source": "distilled",
+  "recency": "2026-08-18",
+  "topic": "OpenFeature feature_flag.evaluations metric missing for a dd-trace-js (Node.js) app although the Agent returns HTTP 200 on OTLP",
+  "product_area": "APM tracer (dd-trace-js) / Feature Flags (OpenFeature) OTLP metrics",
+  "environment": [
+    "Node.js Next.js app on AWS EC2-hosted Kubernetes/OpenShift",
+    "dd-trace-js 5.100.0 bundled with the app",
+    "Node tracer also injected by single-step instrumentation (a separate 6.x version)",
+    "Agent 7.81.1 deployed via Helm",
+    "Agent OTLP HTTP receiver on port 4318",
+    "Remote configuration enabled"
+  ],
+  "symptom_pattern": "The app POSTs OTLP metrics to the Agent and gets HTTP 200, and APM traces flow normally. The feature_flag.evaluations metric has no datapoints for the Node.js service, while the same metric works for a Java service on another cluster.",
+  "root_cause": "Affected dd-trace-js versions generated OTLP metric timestamps with process.hrtime.bigint(). That is a monotonic clock, not Unix epoch time, so the datapoints landed in the 1970 range. The Agent accepted the OTLP request, but the datapoints fell outside the valid ingestion window and never became a queryable series. The OpenFeature provider and the evaluations counter were running through the app-bundled dd-trace 5.100.0, which still had this behavior. The fix changes the timestamps to Unix-epoch nanoseconds. It was merged upstream and shipped in the v5 line with 5.110.0, and the newer major version the customer planned to move to also includes it.",
+  "resolution_path": [
+    "Confirmed the metric works for the Java service, so the Feature Flags intake is not broken",
+    "Confirmed the Node.js app sends OTLP to the Agent and gets HTTP 200, with APM traces flowing",
+    "Asked for a controlled reproduction with otlp_config debug verbosity set to detailed plus an Agent flare, and for Node tracer startup logs to see which dd-trace instance was active",
+    "Customer supplied a write-up identifying the known dd-trace-js timestamp bug and the app-bundled tracer version actually in use",
+    "TSE confirmed the analysis matched the upstream issue and fix, and agreed the flare was not needed before testing the fix",
+    "Customer upgraded the tracer versions and updated their apps",
+    "Server-side flag evaluations then appeared and the customer confirmed the ticket could be closed"
+  ],
+  "info_needed": [
+    "Which dd-trace instance and version is active at runtime (injected vs app-bundled)",
+    "Whether the OTLP payload received by the Agent contains feature_flag.evaluations for the affected service",
+    "Agent flare and detailed OTLP debug logs from a controlled reproduction, with UTC time, flag key, environment, pods and approximate evaluation count",
+    "Effective OpenFeature and OTel metrics configuration from the tracer startup logs"
+  ],
+  "qa_pairs": [
+    {
+      "tse_question": "Can you run one controlled reproduction with the Agent OTLP debug verbosity set to detailed, trigger a known flag evaluation several times, and send an Agent flare with the timestamp, flag key, environment, pods and cluster?",
+      "customer_answer": "The customer did not run it. They sent a follow-up document with their own root-cause analysis pointing to a known tracer timestamp bug."
+    },
+    {
+      "tse_question": "Can you share the Node.js tracer startup and configuration logs so we can confirm which dd-trace instance and version is active and how OpenFeature and OTel metrics are configured?",
+      "customer_answer": "The customer's attached document showed an injected tracer and an app-bundled tracer, and that the feature flag path ran through the older bundled version."
+    },
+    {
+      "tse_question": "After upgrading, can you trigger several evaluations of one known flag and check the metric by service, and confirm the env, flag key and instrumentation scope tags?",
+      "customer_answer": "After the version updates and some app changes, the customer saw server-side flag evaluations and asked to close the ticket."
+    }
+  ],
+  "customer_style": {
+    "tone": "professional, detailed and collaborative",
+    "technical_level": "high",
+    "urgency": "normal"
+  },
+  "sandbox_hint": "",
+  "evidence": [
+    "DD_METRICS_OTEL_ENABLED=true",
+    "feature_flag.evaluations",
+    "datadog.agent.otlp.metrics",
+    "process.hrtime.bigint()",
+    "otlp_config.debug.verbosity: detailed",
+    "verbosity: detailed",
+    "sum:feature_flag.evaluations{*}.as_count() by {service}",
+    "NoopFlaggingProvider",
+    "configMode: service",
+    "remote_configuration: enabled: true",
+    "Agent 7.81.1",
+    "dd-trace-js 5.100.0",
+    "dd-trace 5.110.0"
+  ],
+  "doc_links": [],
+  "difficulty_range": [
+    "high"
+  ],
+  "tse_approach": {
+    "summary": "The TSE separated the Agent-side and tracer-side hypotheses by confirming the metric works for another service and that the app's OTLP requests were accepted. They asked for targeted debug data, then validated the customer's own root-cause analysis against the upstream fix instead of collecting unneeded diagnostics.",
+    "steps": [
+      "Confirmed in the org that the metric exists and works only for the Java/on-prem service",
+      "Confirmed APM traces from the Node.js app reach Datadog and that OTLP POSTs return HTTP 200",
+      "Explained that HTTP 200 only means the request was accepted, not that the metric was in the payload or forwarded",
+      "Requested a controlled reproduction with OTLP debug verbosity detailed and an Agent flare, plus tracer startup logs",
+      "Reviewed the customer's write-up against the upstream issue, fix and versions involved",
+      "Agreed the flare was not needed before testing the fix and recommended upgrading the tracer",
+      "Gave validation queries and tags to check after the upgrade, plus a fallback plan if the metric was still missing",
+      "Kept the ticket open at the customer's request until they could test, then closed it once they confirmed"
+    ],
+    "key_questions": [
+      "Does the OTLP payload received by the Agent actually contain feature_flag.evaluations for the affected service?",
+      "Which dd-trace instance and version is active at runtime, and what is the effective OpenFeature and OTel metrics configuration?",
+      "After the upgrade, does the sum of feature_flag.evaluations as_count() by service show the expected service with the expected env, flag key and instrumentation scope?"
+    ],
+    "communication": [
+      "Acknowledged the customer's detailed write-up, explained why an HTTP 200 does not prove the metric was delivered, listed exact data to collect for the reproduction, and gave the exact validation queries. Also stated what the next diagnostic step would be if the upgrade did not fix it."
+    ],
+    "customer_feedback": ""
+  },
+  "provenance": {
+    "tickets": 1,
+    "csat": "good",
+    "complexity": "high",
+    "solved_month": "2026-08"
+  }
+}
