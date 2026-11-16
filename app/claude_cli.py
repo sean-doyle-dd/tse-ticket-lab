@@ -8,6 +8,9 @@ the API, so a Claude subscription login works without an API key.
   the CLI can do is answer.
 - Structured output: --json-schema; the CLI returns the validated object as
   `structured_output` on its final `result` event, and we validate again with pydantic.
+  The CLI delivers it through a tool call, which isn't constrained decoding: on nested
+  schemas (the grader's) the model sometimes garbles the call and the CLI gives up with
+  `error_max_structured_output_retries`. The retry then asks for plain JSON text instead.
 - Conversations: the CLI takes one prompt, so earlier turns are rendered as a transcript.
   Thinking blocks are not replayed; the customer's persona and hidden truth live in the
   system prompt, which is all it needs to stay consistent.
@@ -35,6 +38,31 @@ _PARENT_SESSION_VARS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CLAUDE_CODE_SES
                         "CLAUDE_PID", "CLAUDE_EFFORT")
 _AUTH_MARKERS = ("not logged in", "/login", "invalid api key", "oauth token", "authentication",
                  "401", "unauthorized")
+
+
+class _SchemaRetriesExhausted(LLMError):
+    """The CLI gave up on --json-schema output (error_max_structured_output_retries)."""
+
+
+def _ask_for_json(messages, schema):
+    """Append a plain-JSON instruction to the last user turn, for the no --json-schema retry."""
+    note = ("Reply with only a JSON object that matches this JSON schema: no prose, no code "
+            f"fences, no tool calls.\n\n{json.dumps(schema)}")
+    *head, last = messages
+    content = last["content"]
+    if isinstance(content, str):
+        content = f"{content}\n\n{note}"
+    else:
+        content = [*content, {"type": "text", "text": note}]
+    return [*head, {**last, "content": content}]
+
+
+def _strip_fences(text):
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else ""
+        text = text.rsplit("```", 1)[0]
+    return text.strip()
 
 
 def render_transcript(messages):
@@ -121,6 +149,9 @@ class ClaudeCLI:
             if proc.returncode == -9:
                 raise LLMError(f"Claude took longer than {self.timeout}s. Try again.", 504)
             raise self._error(stderr, proc.returncode)
+        if result.get("subtype") == "error_max_structured_output_retries":
+            log.warning("claude CLI gave up on structured output (%s)", model)
+            raise _SchemaRetriesExhausted("Claude couldn't produce output in the required format. Try again.", 502)
         if result.get("is_error") or result.get("subtype") != "success":
             raise self._error(f"{result.get('result') or ''} {result.get('subtype')} {stderr}",
                               result.get("api_error_status"))
@@ -158,26 +189,34 @@ class ClaudeCLI:
     # Same signatures as LLM.structured / LLM.stream_text; max_tokens is the CLI's to manage.
 
     def structured(self, model, system, messages, schema_model, effort="high", max_tokens=None):
+        schema = strict_schema(schema_model)
         last_err = None
         for attempt in range(2):
+            # First try --json-schema; the retry asks for plain JSON text and validates it here.
+            as_tool = attempt == 0
             started = time.monotonic()
-            gen = self._run(model, system, messages, effort, strict_schema(schema_model))
-            while True:
-                try:
+            gen = self._run(model, system, messages if as_tool else _ask_for_json(messages, schema),
+                            effort, schema if as_tool else None)
+            try:
+                while True:
                     next(gen)
-                except StopIteration as stop:
-                    result = stop.value
-                    break
+            except StopIteration as stop:
+                result = stop.value
+            except _SchemaRetriesExhausted as exc:
+                last_err = exc
+                continue
             usage = self._usage(model, result, started)
             self._check_stop(result)
             data = result.get("structured_output")
             try:
                 if data is None:
-                    return schema_model.model_validate_json(result.get("result") or ""), usage
+                    return schema_model.model_validate_json(_strip_fences(result.get("result") or "")), usage
                 return schema_model.model_validate(data), usage
             except ValidationError as exc:
                 last_err = exc
                 log.warning("structured output failed validation (attempt %s): %s", attempt + 1, exc)
+        if isinstance(last_err, LLMError):
+            raise last_err
         raise LLMError(f"Claude returned output that didn't match the schema: {last_err}", 502)
 
     def stream_text(self, model, system, messages, effort="medium", max_tokens=None):

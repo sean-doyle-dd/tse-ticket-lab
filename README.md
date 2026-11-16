@@ -42,7 +42,7 @@ Prefer an API key? Set `LLM_PROVIDER=anthropic` and `ANTHROPIC_API_KEY=...` in `
 claude setup-token                # one-time: prints a long-lived token for your Claude login
 cp .env.example .env              # paste it as CLAUDE_CODE_OAUTH_TOKEN
 docker compose up -d --build
-open http://localhost:8095        # dev sign-in: any name + @datadoghq.com email
+open http://localhost:8095        # no sign-in: it's your own copy
 ```
 
 `docker compose up` is the only setup step. Postgres starts, migrations run, and the app serves on port `8095` (change it with `WEB_PORT`). Health check: `curl localhost:8095/healthz`.
@@ -61,7 +61,7 @@ Set these in `.env`:
 | `POSTGRES_PASSWORD` | Change it from the default. |
 | `GENERATIONS_PER_HOUR`, `MESSAGES_PER_HOUR` | Per-user cost guards (defaults 10 and 120). |
 
-`AUTH_MODE=dev` (the default) is a name and email form with no password, meant for laptops only. Every page shows a banner while it's on.
+`AUTH_MODE=none` (the default) has no sign-in: everyone who opens the app is the same local user. That's the normal setup, where each TSE runs their own copy with their own Claude token. `docker-compose.yml` publishes the port on `127.0.0.1` only, so teammates on your network can't reach your copy (and your Claude subscription). Don't change that while `AUTH_MODE=none`.
 
 ## Claude access
 

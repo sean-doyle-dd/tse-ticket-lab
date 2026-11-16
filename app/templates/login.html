@@ -9,15 +9,6 @@
     <h1>TSE Ticket Lab</h1>
   </div>
   <p class="muted">Practise on realistic customer tickets drawn from recent patterns in your spec, with a customer who answers back and a sandbox you can break and fix.</p>
-  {% if mode == "google" %}
-    <a class="btn btn-primary btn-block" href="{{ url_for('auth.login_google', next=request.args.get('next')) }}">Sign in with Google</a>
-  {% else %}
-    <form method="post" class="stack">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <label>Name<input name="name" autocomplete="name" required></label>
-      <label>Work email<input name="email" type="email" autocomplete="email" required placeholder="you@{{ config.ALLOWED_EMAIL_DOMAIN }}"></label>
-      <button class="btn btn-primary btn-block" type="submit">Continue</button>
-    </form>
-  {% endif %}
+  <a class="btn btn-primary btn-block" href="{{ url_for('auth.login_google', next=request.args.get('next')) }}">Sign in with Google</a>
 </div>
 {% endblock %}

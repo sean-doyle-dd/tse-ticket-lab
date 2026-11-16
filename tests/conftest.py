@@ -95,7 +95,7 @@ def fake_llm():
 def app(tmp_path, fake_llm):
     app = create_app({
         "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'test.db'}",
-        "AUTH_MODE": "dev", "SECRET_KEY": "x" * 40, "WTF_CSRF_ENABLED": False, "TESTING": True,
+        "AUTH_MODE": "none", "SECRET_KEY": "x" * 40, "WTF_CSRF_ENABLED": False, "TESTING": True,
         "ANTHROPIC_API_KEY": "test-key", "RUN_GENERATION_INLINE": True, "ADMIN_EMAILS": ["boss@datadoghq.com"],
         "GENERATIONS_PER_HOUR": 3, "CORPUS_ALLOW_BOOTSTRAP": True,
     }, llm=fake_llm)
@@ -110,4 +110,16 @@ def client(app):
 
 
 def login(client, email="tse@datadoghq.com", name="Test TSE"):
-    return client.post("/login", data={"email": email, "name": name})
+    """Sign in as a specific user. AUTH_MODE=none signs everyone in as one local user, so
+    the multi-user tests (ownership, admin) put the user in the session directly."""
+    from app.models import User
+    with client.application.app_context():
+        user = User.query.filter_by(email=email).first()
+        if user is None:
+            user = User(email=email, name=name)
+            db.session.add(user)
+            db.session.commit()
+        uid = user.id
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(uid)
+        sess["_fresh"] = True

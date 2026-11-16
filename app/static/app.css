@@ -51,7 +51,6 @@ code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
 [hidden] { display: none !important; }
 
 /* ---------------------------------------------------------------- chrome */
-.dev-banner { background: var(--warn-soft); color: var(--warn); text-align: center; font-size: .8rem; padding: .3rem; border-bottom: 1px solid var(--border); }
 .topbar { display: flex; align-items: center; gap: 2rem; padding: 0 1.5rem; height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
 .brand { display: flex; align-items: center; gap: .55rem; font-weight: 700; color: var(--text); }
 .brand svg { color: var(--accent); }

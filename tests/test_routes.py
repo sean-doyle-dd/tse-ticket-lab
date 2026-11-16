@@ -31,18 +31,12 @@ def test_healthz_is_public(client):
     assert body["llm"]["problem"] is None
 
 
-def test_pages_require_login(client):
-    assert client.get("/").status_code == 302
-    assert client.get("/api/specs").status_code in (302, 401)
-
-
-def test_dev_login_enforces_domain(client):
-    r = login(client, email="someone@gmail.com")
-    assert r.status_code == 400
-    r = login(client)
-    assert r.status_code == 302
+def test_no_sign_in_needed(client):
     page = client.get("/")
     assert page.status_code == 200 and b"Generate ticket" in page.data
+    assert b"Sign out" not in page.data
+    assert client.get("/login").status_code == 302
+    assert client.get("/api/specs").status_code == 200
 
 
 def test_full_ticket_lifecycle(client, app, fake_llm):
@@ -91,7 +85,6 @@ def test_full_ticket_lifecycle(client, app, fake_llm):
 def test_other_users_cannot_see_ticket(client):
     login(client)
     sid = _new_ticket(client)
-    client.post("/logout")
     login(client, email="other@datadoghq.com", name="Other")
     assert client.get(f"/api/scenarios/{sid}").status_code == 404
     assert client.get(f"/t/{sid}").status_code == 404
@@ -101,7 +94,6 @@ def test_other_users_cannot_see_ticket(client):
 def test_admin_can_view_but_not_reply(client):
     login(client)
     sid = _new_ticket(client)
-    client.post("/logout")
     login(client, email="boss@datadoghq.com", name="Boss")
     assert client.get(f"/api/scenarios/{sid}").status_code == 200
     assert client.post(f"/api/scenarios/{sid}/messages", json={"content": "hi"}).status_code == 403
@@ -179,7 +171,7 @@ def test_generation_failure_is_reported(client, fake_llm):
 
 def test_missing_api_key_blocks_generation(tmp_path, fake_llm):
     from app import create_app
-    app = create_app({"SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'k.db'}", "AUTH_MODE": "dev",
+    app = create_app({"SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'k.db'}", "AUTH_MODE": "none",
                       "WTF_CSRF_ENABLED": False, "ANTHROPIC_API_KEY": ""}, llm=fake_llm)
     with app.app_context():
         db.create_all()
@@ -192,12 +184,13 @@ def test_missing_api_key_blocks_generation(tmp_path, fake_llm):
 
 def test_csrf_enforced(tmp_path, fake_llm):
     from app import create_app
-    app = create_app({"SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'c.db'}", "AUTH_MODE": "dev",
+    app = create_app({"SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'c.db'}", "AUTH_MODE": "none",
                       "ANTHROPIC_API_KEY": "k"}, llm=fake_llm)
     with app.app_context():
         db.create_all()
     c = app.test_client()
-    assert c.post("/login", data={"email": "a@datadoghq.com", "name": "A"}).status_code == 400
+    r = c.post("/api/scenarios", json={"spec": "apm", "difficulty": "low"})
+    assert r.status_code == 400 and b"CSRF" in r.data
 
 
 def test_google_mode_requires_secrets(tmp_path):

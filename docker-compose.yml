@@ -38,7 +38,8 @@ services:
       # _staging/ is skipped by the loader.
       - ./corpus:/app/corpus:ro
     ports:
-      - "${WEB_PORT:-8095}:8000"
+      # Loopback only: with AUTH_MODE=none anyone who can reach the port is signed in as you.
+      - "127.0.0.1:${WEB_PORT:-8095}:8000"
     depends_on:
       db:
         condition: service_healthy

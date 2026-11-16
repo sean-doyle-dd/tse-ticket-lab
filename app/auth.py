@@ -1,6 +1,7 @@
-"""Login. AUTH_MODE=google: Google OIDC restricted to ALLOWED_EMAIL_DOMAIN (the `hd` claim
-is checked server-side, not just requested). AUTH_MODE=dev: a name + email form for local
-use only, with a banner on every page."""
+"""Login. AUTH_MODE=none (default): no sign-in; everyone using this instance is one local
+user. That fits the normal setup, where each TSE runs their own copy with their own Claude
+token. AUTH_MODE=google: Google OIDC restricted to ALLOWED_EMAIL_DOMAIN (the `hd` claim is
+checked server-side, not just requested), for a shared deployment."""
 from authlib.integrations.flask_client import OAuth
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required, login_user, logout_user
@@ -10,6 +11,8 @@ from .models import User, utcnow
 
 bp = Blueprint("auth", __name__)
 oauth = OAuth()
+
+LOCAL_EMAIL = "local@localhost"
 
 
 def init_auth(app):
@@ -25,7 +28,20 @@ def init_auth(app):
             server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
             client_kwargs={"scope": "openid email profile"},
         )
+    else:
+        app.before_request(_sign_in_local)
     app.register_blueprint(bp)
+
+
+def _sign_in_local():
+    if current_user.is_authenticated or request.endpoint in ("static", "api.healthz"):
+        return
+    user = User.query.filter_by(email=LOCAL_EMAIL).first()
+    if user is None:
+        user = User(email=LOCAL_EMAIL, name="You")
+        db.session.add(user)
+        db.session.commit()
+    login_user(user, remember=True)
 
 
 @login_manager.user_loader
@@ -60,22 +76,11 @@ def _safe_next(target):
     return target if target and target.startswith("/") and not target.startswith("//") else url_for("ui.index")
 
 
-@bp.route("/login", methods=["GET", "POST"])
+@bp.route("/login")
 def login():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated or current_app.config["AUTH_MODE"] != "google":
         return redirect(url_for("ui.index"))
-    mode = current_app.config["AUTH_MODE"]
-    if request.method == "POST":
-        if mode != "dev":
-            abort(404)
-        email = request.form.get("email", "")
-        name = request.form.get("name", "")
-        if "@" not in email or not _domain_ok(email):
-            flash(f"Use your @{current_app.config['ALLOWED_EMAIL_DOMAIN']} address.", "error")
-            return render_template("login.html", mode=mode), 400
-        _sign_in(email, name)
-        return redirect(_safe_next(request.args.get("next")))
-    return render_template("login.html", mode=mode)
+    return render_template("login.html")
 
 
 @bp.route("/login/google")
@@ -108,5 +113,7 @@ def google_callback():
 @bp.route("/logout", methods=["POST"])
 @login_required
 def logout():
+    if current_app.config["AUTH_MODE"] != "google":
+        return redirect(url_for("ui.index"))
     logout_user()
     return redirect(url_for("auth.login"))

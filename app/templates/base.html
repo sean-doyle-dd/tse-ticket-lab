@@ -11,7 +11,6 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
 </head>
 <body class="{% block body_class %}{% endblock %}">
-  {% if auth_mode == "dev" %}<div class="dev-banner">Dev sign-in mode. Don't expose this deployment to a shared network.</div>{% endif %}
   {% if current_user.is_authenticated %}
   <header class="topbar">
     <a class="brand" href="{{ url_for('ui.index') }}">
@@ -24,12 +23,14 @@
       {% if is_admin %}<a href="{{ url_for('ui.team') }}" class="{{ 'active' if request.endpoint == 'ui.team' }}">Team</a>{% endif %}
     </nav>
     <div class="who">
+      {% if auth_mode == "google" %}
       <span class="avatar" aria-hidden="true">{{ (current_user.name or current_user.email)[:1] | upper }}</span>
       <span class="who-name">{{ current_user.name }}</span>
       <form method="post" action="{{ url_for('auth.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
       </form>
+      {% endif %}
     </div>
   </header>
   {% endif %}
