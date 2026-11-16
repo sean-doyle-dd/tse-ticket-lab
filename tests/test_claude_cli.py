@@ -55,3 +55,17 @@ def test_structured_through_fake_cli(tmp_path, monkeypatch):
                                 "structured_output": {"revealed_fact_ids": ["f1"], "ungrounded_details": []}, "usage": {}}], monkeypatch)
     out, usage = llm.structured("claude-haiku-5-5", "sys", [{"role": "user", "content": "x"}], DisclosureCheck)
     assert out.revealed_fact_ids == ["f1"]
+
+
+def test_structured_falls_back_to_plain_json(tmp_path):
+    # First call (with --json-schema) gives up; the retry without it returns JSON text.
+    gave_up = {"type": "result", "subtype": "error_max_structured_output_retries", "is_error": True, "usage": {}}
+    ok = {"type": "result", "subtype": "success", "is_error": False, "stop_reason": "end_turn", "usage": {},
+          "result": '```json\n{"revealed_fact_ids": ["f2"], "ungrounded_details": []}\n```'}
+    script = tmp_path / "claude"
+    script.write_text("#!/bin/sh\ncat >/dev/null\n"
+                      f"case \"$*\" in *--json-schema*) printf '%s\\n' '{json.dumps(gave_up)}';; *) printf '%s\\n' '{json.dumps(ok)}';; esac\n")
+    script.chmod(0o755)
+    llm = LLM({"LLM_PROVIDER": "claude_cli", "CLAUDE_CLI_PATH": str(script)})
+    out, _ = llm.structured("claude-opus-5-5", "sys", [{"role": "user", "content": "x"}], DisclosureCheck)
+    assert out.revealed_fact_ids == ["f2"]

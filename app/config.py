@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 LLM_PROVIDERS = ("anthropic", "bedrock", "vertex", "claude_cli")
-AUTH_MODES = ("google", "dev")
+AUTH_MODES = ("none", "google")
 
 
 def _bool(env, name, default):
@@ -34,6 +34,11 @@ def _list(env, name):
     return [x.strip().lower() for x in env.get(name, "").split(",") if x.strip()]
 
 
+def _auth_mode(env):
+    mode = env.get("AUTH_MODE", "none").strip().lower()
+    return "none" if mode in ("", "dev") else mode   # "dev" was the old name-and-email form
+
+
 def load(env=None):
     """Return a flat dict suitable for `app.config.from_mapping`."""
     e = os.environ if env is None else env
@@ -41,7 +46,7 @@ def load(env=None):
         "SECRET_KEY": e.get("SECRET_KEY", ""),
         "SQLALCHEMY_DATABASE_URI": e.get("DATABASE_URL") or f"sqlite:///{ROOT / 'instance' / 'dev.db'}",
         "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True},
-        "AUTH_MODE": e.get("AUTH_MODE", "dev").strip().lower(),
+        "AUTH_MODE": _auth_mode(e),
         "GOOGLE_CLIENT_ID": e.get("GOOGLE_CLIENT_ID", ""),
         "GOOGLE_CLIENT_SECRET": e.get("GOOGLE_CLIENT_SECRET", ""),
         "ALLOWED_EMAIL_DOMAIN": e.get("ALLOWED_EMAIL_DOMAIN", "datadoghq.com").strip().lower(),
