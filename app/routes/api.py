@@ -47,6 +47,7 @@ def scenario_public(s):
             "facts_total": len((s.truth or {}).get("facts", [])),
             "provenance": _provenance(s.truth or {}),
             "facts_revealed": len(s.revealed_fact_ids or []),
+            "hints": services.hints_public(s),
         })
     if s.status == "closed":
         out["truth"] = s.truth
@@ -159,6 +160,23 @@ def post_message(scenario_id):
 
     return Response(stream_with_context(events()), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@bp.post("/api/scenarios/<scenario_id>/hints")
+@login_required
+def take_hint(scenario_id):
+    s = _own(scenario_id)
+    if s.user_id != current_user.id:
+        return _err("Only the ticket owner can ask for hints.", 403)
+    if s.status != "open":
+        return _err("This ticket is not open.", 409)
+    try:
+        hint = services.take_hint(s)
+    except services.NoHintLeft as exc:
+        return _err(str(exc), 409)
+    except LLMError as exc:
+        return _err(str(exc), exc.status)
+    return jsonify({"hint": hint["hint"], "hints": services.hints_public(s)})
 
 
 @bp.post("/api/scenarios/<scenario_id>/close")

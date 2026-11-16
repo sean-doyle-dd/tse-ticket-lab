@@ -68,11 +68,13 @@ def load(env=None):
         "MODEL_GRADER": e.get("MODEL_GRADER", "claude-opus-5-5"),
         "MODEL_CLASSIFIER": e.get("MODEL_CLASSIFIER", "claude-haiku-5-5"),
         "MODEL_VERIFIER": e.get("MODEL_VERIFIER", "claude-sonnet-5-5"),
+        "MODEL_HINTS": e.get("MODEL_HINTS", "claude-sonnet-5-5"),
         "EFFORT_GENERATOR": e.get("EFFORT_GENERATOR", "high"),
         "EFFORT_CUSTOMER": e.get("EFFORT_CUSTOMER", "medium"),
         "EFFORT_GRADER": e.get("EFFORT_GRADER", "high"),
         "EFFORT_CLASSIFIER": e.get("EFFORT_CLASSIFIER", "low"),
         "EFFORT_VERIFIER": e.get("EFFORT_VERIFIER", "medium"),
+        "EFFORT_HINTS": e.get("EFFORT_HINTS", "medium"),
         # Every generated ticket is checked against its source ticket; unsupported technical
         # claims trigger a regeneration (up to GROUNDING_ATTEMPTS in all), then the ticket
         # fails rather than ship them.

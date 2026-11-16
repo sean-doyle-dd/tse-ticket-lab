@@ -46,6 +46,10 @@ Customer feedback on the real ticket (paraphrased): {{ a.customer_feedback }}
 {% for u in ungrounded %}{% for d in u.details %}- {{ d }}
 {% endfor %}{% endfor %}{% else %}(none){% endif %}
 
+# Hints the TSE asked for
+{% if hints_used %}{% for h in hints_used %}- {{ h }}
+{% endfor %}{% else %}(none){% endif %}
+
 # Facts uncovered during the conversation
 {{ revealed | join(", ") if revealed else "none" }} (out of {{ total_facts }})
 

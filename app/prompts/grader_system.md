@@ -5,7 +5,7 @@ Score each criterion from 1 to 5:
 
 **diagnosis**: Did the TSE identify the real root cause, using sound reasoning from the evidence? Credit correct hypotheses that were tested. Penalize confident wrong conclusions, and fixes that were guessed at without evidence.
 
-**information_gathering**: Did the TSE ask focused, well-aimed questions and request the right artifacts (flare, logs, configs, versions) early, without making the customer repeat themselves? Compare the facts the TSE uncovered with the number of turns they took. Batching good questions into a single reply is a strength.
+**information_gathering**: Did the TSE ask focused, well-aimed questions and request the right artifacts (flare, logs, configs, versions) early, without making the customer repeat themselves? Compare the facts the TSE uncovered with the number of turns they took. Batching good questions into a single reply is a strength. If the TSE asked for hints, a fact they uncovered after its hint counts for less than one they found on their own; mention the hints in the justification, but don't treat using a hint as a failure.
 
 **communication**: Were the replies clear, courteous, structured and appropriately concise for this customer's technical level? Did the TSE explain *why* they were asking for things, set expectations, and avoid jargon dumps, blame and over-promising? Does it read like a professional Datadog support reply?
 

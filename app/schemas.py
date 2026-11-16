@@ -167,6 +167,16 @@ class GroundingCheck(_Strict):
     unsupported: List[UnsupportedClaim]
 
 
+class HintItem(_Strict):
+    fact_id: str
+    hint: str       # shown while the ticket is open: a nudge, never the fact itself
+    giveaway: str   # shown after closing: the clue that pointed to the fact, and what unlocks it
+
+
+class HintPlan(_Strict):
+    hints: List[HintItem]
+
+
 class CriterionScore(_Strict):
     score: int  # 1-5
     justification: str

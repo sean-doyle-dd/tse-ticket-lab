@@ -115,6 +115,7 @@
 
     renderSandbox();
     renderProgress();
+    renderHints();
     const closed = state.status === "closed";
     $("#composer").hidden = closed || readonly;
     $("#btn-close").hidden = closed || readonly;
@@ -141,6 +142,39 @@
     $("#facts-text").textContent = total
       ? `You've uncovered ${got} of ${total} key facts the customer knows.`
       : "";
+  }
+
+  function renderHints() {
+    const h = state.hints || { max: 0, used: [] };
+    const closed = state.status === "closed";
+    const left = Math.max(0, h.max - h.used.length);
+    $("#hint-card").hidden = closed || !h.max || (readonly && !h.used.length);
+    $("#hint-list").innerHTML = h.used.map((x) => `<li>${esc(x.hint)}</li>`).join("");
+    const btn = $("#btn-hint");
+    btn.hidden = readonly;
+    btn.disabled = !left;
+    btn.textContent = left ? `Get a hint (${left} of ${h.max} left)` : "No hints left";
+  }
+
+  async function getHint() {
+    const btn = $("#btn-hint"), errEl = $("#hint-error");
+    errEl.textContent = "";
+    btn.disabled = true;
+    btn.textContent = "Thinking…";
+    try {
+      const res = await TG.api(`/api/scenarios/${id}/hints`, { method: "POST", body: "{}" });
+      state.hints = res.hints;
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+    renderHints();
+  }
+
+  function giveawaysHTML(h) {
+    if (!h || !h.plan || !h.plan.length) return "";
+    return `<h3>What gave each fact away</h3><ul class="facts giveaways">${h.plan.map((p) => `
+      <li class="${p.revealed ? "found" : "missed"}"><span class="fact-mark">${p.revealed ? "✓" : "✗"}</span><strong>${esc(p.statement)}</strong>${p.used ? ' <span class="pill pill-medium">Hint used</span>' : ""}
+        <p class="small">${esc(p.giveaway)}</p>${p.used ? `<p class="muted small">Your hint: ${esc(p.hint)}</p>` : ""}</li>`).join("")}</ul>`;
   }
 
   function scoreClass(n) { return n >= 75 ? "good" : n >= 50 ? "ok" : "low"; }
@@ -188,6 +222,7 @@
         <h3>Resolution</h3><ol>${truth.resolution_steps.map((s) => `<li>${esc(s)}</li>`).join("")}</ol>
         ${truth.acceptable_alternatives.length ? `<h3>Also acceptable</h3><ul>${truth.acceptable_alternatives.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
         <h3>Hidden facts</h3><ul class="facts">${truth.facts.map((f) => `<li class="${revealed.has(f.id) ? "found" : "missed"}"><span class="fact-mark">${revealed.has(f.id) ? "✓" : "✗"}</span>${esc(f.statement)} <span class="muted small">(revealed when ${esc(f.reveal_when)})</span></li>`).join("")}</ul>
+        ${giveawaysHTML(state.hints)}
         ${truth.red_herrings.length ? `<h3>Red herrings</h3><ul>${truth.red_herrings.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : ""}
         <h3>Escalation guidance</h3><p>${esc(truth.escalation.replace("_", " "))}: ${esc(truth.escalation_reason)}</p>
         ${truth.doc_links.length ? `<h3>Docs</h3><ul>${truth.doc_links.map((u) => `<li><a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u)}</a></li>`).join("")}</ul>` : ""}
@@ -289,7 +324,9 @@
       const fresh = await TG.api(`/api/scenarios/${id}`);
       state.facts_revealed = fresh.facts_revealed;
       state.facts_total = fresh.facts_total;
+      state.hints = fresh.hints;
       renderProgress();
+      renderHints();
     } catch (_) { }
   }
 
@@ -323,6 +360,7 @@
   // --------------------------------------------------------------- wire up
   $("#composer").addEventListener("submit", (e) => { e.preventDefault(); send("reply"); });
   $("#btn-resolution").addEventListener("click", () => send("resolution"));
+  $("#btn-hint").addEventListener("click", getHint);
   $("#reply").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send("reply"); } });
   const dlg = $("#confirm-close");
   $("#btn-close").addEventListener("click", () => (dlg.showModal ? dlg.showModal() : closeTicket()));
