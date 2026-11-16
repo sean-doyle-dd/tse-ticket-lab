@@ -1,4 +1,4 @@
-"""The three Claude-backed jobs: generate a scenario, play the customer, grade the TSE.
+"""The Claude-backed jobs: generate a scenario, play the customer, hint, grade the TSE.
 
 These are pure functions over plain data (dicts, pydantic models, and an `LLM`), with
 no Flask or DB access, so they're easy to test with a fake LLM. The routes layer
@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from .catalog import DIFFICULTIES, SPECS
 from .llm import LLMError, drain, to_json
-from .schemas import DisclosureCheck, GeneratedScenario, GradeResult, GroundingCheck
+from .schemas import DisclosureCheck, GeneratedScenario, GradeResult, GroundingCheck, HintPlan
 
 PROMPTS = Environment(
     loader=FileSystemLoader(str(Path(__file__).parent / "prompts")),
@@ -199,6 +199,31 @@ def classify_disclosure(llm, cfg, truth, reply_text, ticket_text=""):
     return [fid for fid in result.revealed_fact_ids if fid in valid], result.ungrounded_details, usage
 
 
+# ----------------------------------------------------------------------------- hints
+
+MAX_HINTS = 4
+
+
+def plan_hints(llm, cfg, scenario_row):
+    """Returns (plan, usage): up to MAX_HINTS {fact_id, hint, giveaway} dicts, in the order
+    a strong TSE would uncover the facts. Fact ids the model invents are dropped."""
+    t, truth = scenario_row["ticket"], scenario_row["truth"]
+    facts = truth.get("facts") or []
+    if not facts:
+        return [], None
+    user = _render("hints_user.md.j2", t=t, truth=truth, source=truth.get("source") or {},
+                   max_hints=min(MAX_HINTS, len(facts)))
+    result, usage = llm.structured(
+        cfg["MODEL_HINTS"], _render("hints_system.md"), [{"role": "user", "content": user}], HintPlan,
+        effort=cfg["EFFORT_HINTS"], max_tokens=8000,
+    )
+    valid, plan = {f["id"] for f in facts}, []
+    for h in result.hints:
+        if h.fact_id in valid and h.fact_id not in {p["fact_id"] for p in plan}:
+            plan.append({"fact_id": h.fact_id, "hint": h.hint.strip(), "giveaway": h.giveaway.strip()})
+    return plan[:MAX_HINTS], usage
+
+
 # ---------------------------------------------------------------------------- grading
 
 WEIGHTS = {"diagnosis": 0.3, "information_gathering": 0.25, "communication": 0.2, "resolution": 0.25}
@@ -230,6 +255,7 @@ def grade_scenario(llm, cfg, scenario_row, history):
         transcript=transcript,
         source=truth.get("source") or {},
         ungrounded=scenario_row.get("ungrounded") or [],
+        hints_used=scenario_row.get("hints_used") or [],
     )
     grade, usage = llm.structured(
         cfg["MODEL_GRADER"], _render("grader_system.md"), [{"role": "user", "content": user}],
@@ -245,6 +271,6 @@ def grade_scenario(llm, cfg, scenario_row, history):
 
 __all__ = [
     "generate_scenario", "customer_system_prompt", "build_customer_messages",
-    "customer_reply_stream", "classify_disclosure", "grade_scenario", "overall_score",
+    "customer_reply_stream", "classify_disclosure", "plan_hints", "grade_scenario", "overall_score",
     "RESOLUTION_DIRECTIVE", "drain",
 ]

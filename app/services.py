@@ -1,7 +1,8 @@
 """Persistence and orchestration around engine.py: scenario lifecycle, background
-generation, the streamed customer turn, grading, quotas and token accounting."""
+generation, the streamed customer turn, hints, grading, quotas and token accounting."""
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 
 from flask import current_app
@@ -18,6 +19,10 @@ GENERATION_STALE_AFTER = timedelta(minutes=10)
 
 
 class QuotaExceeded(Exception):
+    pass
+
+
+class NoHintLeft(Exception):
     pass
 
 
@@ -130,7 +135,7 @@ def history_dicts(s):
 def scenario_dict(s):
     return {"ticket": s.ticket, "truth": s.truth, "difficulty": s.difficulty, "spec": s.spec,
             "seed_ids": s.seed_ids, "revealed_fact_ids": s.revealed_fact_ids,
-            "ungrounded": ungrounded_report(s)}
+            "ungrounded": ungrounded_report(s), "hints_used": _hints_used_text(s)}
 
 
 def add_tse_message(s, user, content, kind):
@@ -188,12 +193,81 @@ def ungrounded_report(s):
     return [{"message_id": m.id, "details": m.ungrounded} for m in s.messages if m.ungrounded]
 
 
+# ----------------------------------------------------------------------------- hints
+
+def _hint_state(s):
+    h = s.hints or {}
+    return h.get("plan"), list(h.get("used") or [])
+
+
+def _hints_used_text(s):
+    plan, used = _hint_state(s)
+    by_id = {h["fact_id"]: h for h in plan or []}
+    return [f"{fid}: {by_id[fid]['hint']}" for fid in used if fid in by_id]
+
+
+def hint_limit(s):
+    plan, _ = _hint_state(s)
+    if plan is not None:
+        return len(plan)
+    return min(engine.MAX_HINTS, len((s.truth or {}).get("facts") or []))
+
+
+def _save_plan(s, plan, usage):
+    record_usage("hints", usage, s.user_id, s.id)
+    s.hints = {"plan": plan, "used": _hint_state(s)[1]}
+
+
+def take_hint(s):
+    """The hint for the next planned fact the TSE hasn't uncovered or been hinted at yet."""
+    plan, used = _hint_state(s)
+    if plan is None:
+        plan, usage = engine.plan_hints(ext("llm"), current_app.config, scenario_dict(s))
+        _save_plan(s, plan, usage)
+        db.session.commit()
+    if len(used) >= len(plan):
+        raise NoHintLeft(f"You've used all {len(plan)} hints on this ticket.")
+    revealed = set(s.revealed_fact_ids or [])
+    nxt = next((h for h in plan if h["fact_id"] not in used and h["fact_id"] not in revealed), None)
+    if nxt is None:
+        raise NoHintLeft("You've already uncovered every fact the hints cover. Time to propose a fix?")
+    # Reassign rather than mutate: a plain JSON column doesn't track in-place changes.
+    s.hints = {"plan": plan, "used": used + [nxt["fact_id"]]}
+    db.session.commit()
+    return nxt
+
+
+def hints_public(s):
+    """While open: the hints taken so far. Once closed: every planned fact with its giveaway."""
+    plan, used = _hint_state(s)
+    by_id = {h["fact_id"]: h for h in plan or []}
+    out = {"max": hint_limit(s), "used": [{"fact_id": fid, "hint": by_id[fid]["hint"]} for fid in used if fid in by_id]}
+    if s.status == "closed" and plan:
+        facts = {f["id"]: f for f in (s.truth or {}).get("facts", [])}
+        revealed = set(s.revealed_fact_ids or [])
+        out["plan"] = [{**h, "statement": facts.get(h["fact_id"], {}).get("statement", ""),
+                        "used": h["fact_id"] in used, "revealed": h["fact_id"] in revealed} for h in plan]
+    return out
+
+
 # --------------------------------------------------------------------------- grading
 
 def close_and_grade(s):
     tg = current_app.extensions["tg"]
-    grade, overall, usage = engine.grade_scenario(tg["llm"], current_app.config, scenario_dict(s), history_dicts(s))
+    cfg, row = current_app.config, scenario_dict(s)
+    plan_future = None
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        if _hint_state(s)[0] is None:
+            # Plan the hints alongside grading so the answer key can show what gave each
+            # fact away. engine.plan_hints is pure, so it's safe off the request thread.
+            plan_future = pool.submit(engine.plan_hints, tg["llm"], cfg, row)
+        grade, overall, usage = engine.grade_scenario(tg["llm"], cfg, row, history_dicts(s))
     record_usage("grade", usage, s.user_id, s.id)
+    if plan_future is not None:
+        try:
+            _save_plan(s, *plan_future.result())
+        except LLMError as exc:  # the giveaways are a bonus; never block the grade on them
+            log.warning("hint plan failed for %s: %s", s.id, exc)
     db.session.add(Grade(scenario_id=s.id, overall=overall, result=to_json(grade)))
     s.status, s.closed_at = "closed", utcnow()
     db.session.commit()

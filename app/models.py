@@ -45,6 +45,9 @@ class Scenario(db.Model):
     sandbox = db.Column(JSON, nullable=True)
     difficulty_rationale = db.Column(db.Text, nullable=True)
     revealed_fact_ids = db.Column(JSON, nullable=False, default=list)
+    # {"plan": [{fact_id, hint, giveaway}], "used": [fact_id, ...]}; the plan is built on
+    # the first hint request, or at close so the giveaways always show in the answer key.
+    hints = db.Column(JSON, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
     opened_at = db.Column(db.DateTime, nullable=True)
     closed_at = db.Column(db.DateTime, nullable=True)

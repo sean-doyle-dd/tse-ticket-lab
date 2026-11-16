@@ -3,7 +3,7 @@ import pytest
 from app import create_app
 from app.extensions import db
 from app.llm import StreamResult, Usage
-from app.schemas import DisclosureCheck, GeneratedScenario, GradeResult, GroundingCheck
+from app.schemas import DisclosureCheck, GeneratedScenario, GradeResult, GroundingCheck, HintPlan
 
 
 def sample_scenario(**sandbox):
@@ -73,6 +73,12 @@ class FakeLLM:
             return GroundingCheck(unsupported=claims), usage
         if schema_model is GradeResult:
             return self.grade.model_copy(deep=True), usage
+        if schema_model is HintPlan:
+            return HintPlan.model_validate({"hints": [
+                {"fact_id": "f1", "hint": "Look again at what changed in the deploy.", "giveaway": "The ticket says it broke since this morning's deploy."},
+                {"fact_id": "f1", "hint": "duplicate", "giveaway": "duplicate"},
+                {"fact_id": "zz", "hint": "invented fact", "giveaway": "invented"},
+            ]}), usage
         raise AssertionError(schema_model)
 
     def stream_text(self, model, system, messages, effort="medium", max_tokens=16000):

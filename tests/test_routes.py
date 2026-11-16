@@ -198,3 +198,57 @@ def test_google_mode_requires_secrets(tmp_path):
     from app import create_app
     with pytest.raises(RuntimeError, match="GOOGLE_CLIENT_ID"):
         create_app({"SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'g.db'}", "AUTH_MODE": "google"})
+
+
+def test_hints_nudge_then_show_giveaways_after_close(client, fake_llm):
+    login(client)
+    sid = _new_ticket(client)
+    assert client.get(f"/api/scenarios/{sid}").get_json()["hints"] == {"max": 2, "used": []}  # min(4, facts) until planned
+
+    r = client.post(f"/api/scenarios/{sid}/hints", json={})
+    assert r.status_code == 200, r.get_json()
+    body = r.get_json()
+    assert body["hint"] == "Look again at what changed in the deploy."
+    assert body["hints"]["max"] == 1, "duplicate and invented fact ids are dropped from the plan"
+    assert "giveaway" not in json.dumps(body), "giveaways stay hidden while the ticket is open"
+
+    r = client.post(f"/api/scenarios/{sid}/hints", json={})
+    assert r.status_code == 409 and "all 1 hints" in r.get_json()["error"]
+
+    data = client.post(f"/api/scenarios/{sid}/close").get_json()
+    plan = data["hints"]["plan"]
+    assert plan[0]["used"] and plan[0]["giveaway"].startswith("The ticket says")
+    grader_prompt = [c for c in fake_llm.calls if c[1] == "GradeResult"][-1][3][0]["content"]
+    assert "f1: Look again at what changed in the deploy." in grader_prompt
+    assert client.post(f"/api/scenarios/{sid}/hints", json={}).status_code == 409
+
+
+def test_close_plans_giveaways_without_hints(client, fake_llm):
+    login(client)
+    sid = _new_ticket(client)
+    data = client.post(f"/api/scenarios/{sid}/close").get_json()
+    assert data["hints"]["used"] == [] and not data["hints"]["plan"][0]["used"]
+    assert data["status"] == "closed" and data["grade"]
+
+
+def test_close_survives_hint_plan_failure(client, fake_llm, monkeypatch):
+    from app import engine
+    login(client)
+    sid = _new_ticket(client)
+
+    def boom(*a, **k):
+        raise LLMError("hints down", 502)
+    monkeypatch.setattr(engine, "plan_hints", boom)
+    data = client.post(f"/api/scenarios/{sid}/close").get_json()
+    assert data["status"] == "closed" and "plan" not in data["hints"]
+
+
+def test_hint_skips_facts_already_uncovered(client, fake_llm):
+    login(client)
+    sid = _new_ticket(client)
+    with client.application.app_context():
+        s = db.session.get(Scenario, sid)
+        s.revealed_fact_ids = ["f1"]
+        db.session.commit()
+    r = client.post(f"/api/scenarios/{sid}/hints", json={})
+    assert r.status_code == 409 and "already uncovered" in r.get_json()["error"]

@@ -1,0 +1,27 @@
+Write {{ max_hints }} hint{{ "s" if max_hints != 1 else "" }}.
+
+# The ticket as the customer opened it
+Subject: {{ t.subject }}
+
+{{ t.body }}
+{% for a in t.attachments %}
+[attachment {{ a.filename }}]
+{{ a.content }}
+{% endfor %}
+
+# Answer key
+Root cause: {{ truth.root_cause }}
+
+Hidden facts:
+{% for f in truth.facts %}- {{ f.id }} ({{ f.category }}, {{ f.grounding }}): {{ f.statement }}
+  The customer shares it when: {{ f.reveal_when }}
+{% endfor %}
+{% if truth.red_herrings %}Red herrings (don't hint towards these):
+{% for r in truth.red_herrings %}- {{ r }}
+{% endfor %}{% endif %}
+{%- set a = source.get("tse_approach") or {} %}
+{%- if a.get("key_questions") %}
+# Questions the real TSE asked on the source ticket
+{% for q in a.key_questions %}- {{ q }}
+{% endfor %}
+{%- endif %}

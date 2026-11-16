@@ -80,6 +80,13 @@
         <button class="btn btn-danger-ghost btn-block" id="btn-close" type="button">Close ticket &amp; get graded</button>
         <p class="muted small">Closing reveals the answer key, so only close when you're done.</p>
       </section>
+      <section class="card" id="hint-card" hidden>
+        <h3>Stuck?</h3>
+        <ol id="hint-list" class="hint-list"></ol>
+        <button class="btn btn-ghost btn-block" id="btn-hint" type="button">Get a hint</button>
+        <p class="muted small" id="hint-note">A nudge towards the next fact to uncover, not the answer. The grader sees which hints you used.</p>
+        <div id="hint-error" class="error-text" role="alert"></div>
+      </section>
     </aside>
   </div>
 </div>
